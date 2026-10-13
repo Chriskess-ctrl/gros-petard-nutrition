@@ -1,5 +1,5 @@
 // Un cache de code par dossier. Aucun journal personnel ni requête externe.
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 const SCOPE = new URL(self.registration.scope).pathname;
 const PREFIX = 'gp-nutrition:'+SCOPE+':';
 const CACHE = PREFIX+VERSION;
