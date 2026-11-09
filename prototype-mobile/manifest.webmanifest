@@ -1,0 +1,22 @@
+{
+  "name": "GROS PÉTARD — Nutrition V2 (Prototype)",
+  "short_name": "GP Nutrition V2",
+  "description": "Prototype ergonomique de suivi alimentaire, indépendant de Nutrition LITE.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fff8f0",
+  "theme_color": "#164a39",
+  "icons": [
+    {
+      "src": "../icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
