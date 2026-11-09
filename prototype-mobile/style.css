@@ -62,3 +62,5 @@ nav button[aria-current=page]{background:#533c38;color:#ffe2a2;box-shadow:inset 
 #journal .mealblock .add{font-size:.85rem;padding:8px 10px}
 dialog{color:#173d31}
 @media(max-width:360px){.library-filters{grid-template-columns:1fr}}
+
+.quantity-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quantity-grid select{width:100%;min-height:44px;background:#f8f0df;color:#21392f;border:1px solid #cba467;border-radius:10px;padding:8px;margin-top:5px;font:inherit}#piece-weight-label[hidden],#density-label[hidden]{display:none}#quantity-conversion{min-height:16px;margin:4px 0 8px;color:#53675c}
