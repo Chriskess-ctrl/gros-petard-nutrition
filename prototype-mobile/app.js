@@ -22,7 +22,7 @@ const items=()=>data().items||[];
 const totals=arr=>arr.reduce((a,i)=>{const q=i.grams/100;for(const k of ['kcal','p','c','f'])a[k]+=i[k]*q;return a},{kcal:0,p:0,c:0,f:0});
 const fmt=n=>Math.round(n).toLocaleString('fr-FR');
 const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function update(fn){const record=structuredClone(data());fn(record);db.days[day]=record;save();render();}
+function update(fn){const record=structuredClone(data());fn(record);db.days[day]=record;save();render();window.dispatchEvent(new Event('gp:nutrition-updated'));}
 function renderLibrary(){const query=norm($('food-search').value.trim()),family=$('family-filter').value;const list=db.library.filter(f=>(!family||familyOf(f)===family)&&norm(f.name).includes(query)).sort((a,b)=>a.name.localeCompare(b.name,'fr',{sensitivity:'base'}));$('library-list').innerHTML=list.length?list.map(f=>'<article class="library-food"><div><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g</small></div><button data-library="'+db.library.indexOf(f)+'">Utiliser</button></article>').join(''):'<p class="library-empty">Aucun aliment trouvé. Ajoute un aliment depuis le journal pour le retrouver ici.</p>';}
 function render(){ const goal=db.goals; const pct=(v,max)=>Math.max(0,Math.min(100,v/max*100)); const ring=(id,value,target)=>$(id).style.setProperty('--progress',pct(value,target)+'%'); $('day').value=day;$('journal-date').textContent=new Date(day+'T12:00:00').toLocaleDateString('fr-FR',{dateStyle:'full'});const all=totals(items());$('cal').textContent=fmt(all.kcal);$('remain').textContent=fmt(goal.kcal-all.kcal);$('protein').textContent=fmt(all.p)+' g';$('carbs').textContent=fmt(all.c)+' g';$('fat').textContent=fmt(all.f)+' g';$('complete').checked=!!data().complete;ring('cal-ring',all.kcal,goal.kcal);$('cal-ring').setAttribute('aria-valuenow',String(Math.round(pct(all.kcal,goal.kcal))));for(const [k,id] of [['p','protein'],['c','carbs'],['f','fat']]){ring(k+'-ring',all[k],goal[k]);$(k+'-rest').textContent=fmt(goal[k]-all[k])+' g restants';}for(const k of ['kcal','p','c','f'])$('goal-'+k).value=goal[k];
 $('home-meals').innerHTML=MEALS.map(([key,label])=>{const t=totals(items().filter(i=>i.meal===key));return '<button class="meal" data-open="'+key+'"><span><strong>'+label+'</strong><small>'+items().filter(i=>i.meal===key).length+' aliment(s)</small></span><span class="right">'+fmt(t.kcal)+' kcal ›</span></button>'}).join('');
@@ -38,7 +38,7 @@ for(const k of ['quantity','pieceWeight','density'])$('food-form').elements.name
 $('food-search').addEventListener('input',renderLibrary);
 $('family-filter').addEventListener('change',renderLibrary);
 $('complete').onchange=e=>update(r=>r.complete=e.target.checked);
-$('day').onchange=e=>{if(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)){day=e.target.value;render();}};
-for(const [id,offset] of [['prev',-1],['next',1]])$(id).onclick=()=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+offset);day=isoDate(d);render();};
+$('day').onchange=e=>{if(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)){day=e.target.value;render();window.dispatchEvent(new Event('gp:nutrition-updated'));}};
+for(const [id,offset] of [['prev',-1],['next',1]])$(id).onclick=()=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+offset);day=isoDate(d);render();window.dispatchEvent(new Event('gp:nutrition-updated'));};
 $('export').onclick=()=>{const blob=new Blob([JSON.stringify({format:'prototype-mobile',...db},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='gros-petard-prototype-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 render();
