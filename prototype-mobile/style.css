@@ -72,3 +72,5 @@ dialog{color:#173d31}
 #nutrition-custom[hidden],#nutrition-period-error[hidden]{display:none}#nutrition-period-error{color:#ffcd9a}
 
 .tracking-range{margin:12px 0}.tracking-range>label{display:block;color:#f5dcb2;font-size:.86rem}.tracking-range select{width:100%;min-height:44px;margin-top:6px;background:#fff7e9;color:#24372e;border-radius:9px;padding:7px}.tracking-range [hidden]{display:none!important}.tracking-range .compare-dates input{min-height:44px}
+
+.combined-controls{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}.combined-controls label{display:flex;align-items:center;gap:4px;border:1px solid #997d55;border-radius:20px;padding:8px;color:#f7dfb8;font-size:.8rem}.combined-controls input{accent-color:#e6ae78;width:17px;height:17px}
