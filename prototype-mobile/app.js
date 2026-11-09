@@ -4,8 +4,9 @@ const MEALS=[['breakfast','Petit-déjeuner'],['snack-am','Collation matin'],['lu
 const $=id=>document.getElementById(id);
 const isoDate=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
 const today=()=>isoDate(new Date());
-let day=today(),mealKey=null,editId=null,db={days:{}};
+let day=today(),mealKey=null,editId=null,db={days:{},goals:{kcal:1700,p:80,c:225,f:53}};
 try{const parsed=JSON.parse(localStorage.getItem(KEY)||'{}');if(parsed&&typeof parsed==='object'&&parsed.days&&typeof parsed.days==='object')db=parsed;}catch{}
+db.goals={kcal:1700,p:80,c:225,f:53,...(db.goals||{})};
 const save=()=>localStorage.setItem(KEY,JSON.stringify(db));
 const data=()=>db.days[day]||{items:[],complete:false};
 const items=()=>data().items||[];
@@ -13,7 +14,7 @@ const totals=arr=>arr.reduce((a,i)=>{const q=i.grams/100;for(const k of ['kcal',
 const fmt=n=>Math.round(n).toLocaleString('fr-FR');
 const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function update(fn){const record=structuredClone(data());fn(record);db.days[day]=record;save();render();}
-function render(){ $('day').value=day;$('journal-date').textContent=new Date(day+'T12:00:00').toLocaleDateString('fr-FR',{dateStyle:'full'});const all=totals(items());$('cal').textContent=fmt(all.kcal);$('remain').textContent=fmt(1700-all.kcal);$('protein').textContent=fmt(all.p)+' g';$('carbs').textContent=fmt(all.c)+' g';$('fat').textContent=fmt(all.f)+' g';$('complete').checked=!!data().complete;
+function render(){ const goal=db.goals; const pct=(v,max)=>Math.max(0,Math.min(100,v/max*100)); const ring=(id,value,target)=>$(id).style.setProperty('--progress',pct(value,target)+'%'); $('day').value=day;$('journal-date').textContent=new Date(day+'T12:00:00').toLocaleDateString('fr-FR',{dateStyle:'full'});const all=totals(items());$('cal').textContent=fmt(all.kcal);$('remain').textContent=fmt(goal.kcal-all.kcal);$('protein').textContent=fmt(all.p)+' g';$('carbs').textContent=fmt(all.c)+' g';$('fat').textContent=fmt(all.f)+' g';$('complete').checked=!!data().complete;ring('cal-ring',all.kcal,goal.kcal);$('cal-ring').setAttribute('aria-valuenow',String(Math.round(pct(all.kcal,goal.kcal))));for(const [k,id] of [['p','protein'],['c','carbs'],['f','fat']]){ring(k+'-ring',all[k],goal[k]);$(k+'-rest').textContent=fmt(goal[k]-all[k])+' g restants';}for(const k of ['kcal','p','c','f'])$('goal-'+k).value=goal[k];
 $('home-meals').innerHTML=MEALS.map(([key,label])=>{const t=totals(items().filter(i=>i.meal===key));return '<button class="meal" data-open="'+key+'"><span><strong>'+label+'</strong><small>'+items().filter(i=>i.meal===key).length+' aliment(s)</small></span><span class="right">'+fmt(t.kcal)+' kcal ›</span></button>'}).join('');
 $('journal-meals').innerHTML=MEALS.map(([key,label])=>{const group=items().filter(i=>i.meal===key);return '<section class="mealblock"><header><h2>'+label+'</h2><button class="add" data-add="'+key+'">+ Aliment</button></header>'+(group.length?group.map(i=>'<div class="food"><div><strong>'+safe(i.name)+'</strong><small>'+fmt(i.grams)+' g · '+fmt(i.kcal*i.grams/100)+' kcal</small></div><button data-edit="'+safe(i.id)+'" aria-label="Modifier '+safe(i.name)+'">✎</button><button data-delete="'+safe(i.id)+'" aria-label="Supprimer '+safe(i.name)+'">×</button></div>').join(''):'<p class="empty">Aucun aliment enregistré</p>')+'</section>'}).join('');}
 function page(name){document.querySelectorAll('.page').forEach(e=>e.hidden=e.id!==name);document.querySelectorAll('nav button').forEach(e=>{if(e.dataset.page===name)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current')});scrollTo(0,0);}
