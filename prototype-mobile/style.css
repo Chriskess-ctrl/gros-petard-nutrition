@@ -45,3 +45,20 @@ nav{background:linear-gradient(180deg,#2e2536,#171c29);border-top:2px solid #bd8
 nav button{color:#f1d8ac}
 nav button[aria-current=page]{background:#533c38;color:#ffe2a2;box-shadow:inset 0 0 0 1px #d8a75d}
 @media(max-width:360px){#home-meals{gap:3px}#home-meals .meal strong{font-size:.56rem}#home-meals .meal{min-height:96px}.calorie-ring{width:128px;height:128px}.ring-inner{width:104px;height:104px}}
+
+/* Bibliothèque alphabétique et contraste des fiches */
+.food{color:#183a31}.food strong{color:#173d31}.food small{color:#53675c}
+.library-help{font-size:.85rem;color:#d2d5cb;margin:0 0 14px}
+.library-filters{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.library-filters label{font-size:.8rem;color:#f3d7a4}
+.library-filters input,.library-filters select,#food-family{width:100%;min-height:44px;background:#f8f0df;color:#21392f;border:1px solid #cba467;border-radius:10px;padding:8px;font:inherit;margin-top:5px}
+.library-food{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;margin:8px 0;border:1px solid #ae8552;border-radius:12px;background:#203334}
+.library-food strong{color:#f8e3ba}.library-food small{display:block;font-size:.75rem;color:#c6d0c5;margin-top:3px}
+.library-food button{background:#e9b58d;color:#26362b;border:0;font-size:.8rem;min-width:65px}
+.library-empty{color:#e6d3af;font-size:.86rem}
+#journal .muted,#journal .empty{color:#bfcfc6}
+#journal .mealblock{border-bottom:1px solid #5e6253;padding-bottom:12px;margin:9px 0 12px}
+#journal .mealblock header{min-height:48px}
+#journal .mealblock .add{font-size:.85rem;padding:8px 10px}
+dialog{color:#173d31}
+@media(max-width:360px){.library-filters{grid-template-columns:1fr}}
