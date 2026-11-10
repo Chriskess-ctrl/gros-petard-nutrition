@@ -77,8 +77,7 @@ function render() {
     const group = items().filter(item => item.meal === key);
     const t = totals(group);
     const expanded = journalExpanded === key;
-    const iconExtension = key === 'breakfast' ? 'webp' : 'svg';
-    const icon = `<img src="assets/journal-${key}.${iconExtension}" alt="" width="48" height="48" loading="lazy">`;
+    const icon = `<img src="assets/journal-${key}.webp" alt="" width="48" height="48" loading="lazy">`;
     return '<section class="journal-meal'+(expanded?' is-open':'')+'"><button type="button" class="journal-meal-toggle" data-journal-toggle="'+key+'" aria-expanded="'+expanded+'"><span class="journal-meal-icon" aria-hidden="true">'+icon+'</span><span class="journal-meal-info"><strong>'+label+'</strong><small>'+group.length+' aliment(s) · '+fmt(t.kcal)+' kcal</small></span><span class="journal-chevron" aria-hidden="true">'+(expanded?'⌄':'›')+'</span></button>'+(expanded?'<div class="journal-meal-content">'+(group.length?group.map(i=>'<div class="food"><div><strong>'+safe(i.name)+'</strong><small>'+(i.quantity&&i.unit?fmt(i.quantity)+' '+(i.unit==='piece'?(i.quantity===1?'pièce':'pièces'):i.unit):fmt(i.grams)+' g')+' · '+fmt(i.kcal*i.grams/100)+' kcal</small></div><button data-edit="'+safe(i.id)+'" aria-label="Modifier '+safe(i.name)+'">✎</button><button data-delete="'+safe(i.id)+'" aria-label="Supprimer '+safe(i.name)+'">×</button></div>').join(''):'<p class="journal-empty">Aucun aliment enregistré</p>')+'<button type="button" class="primary journal-add" data-add="'+key+'">+ Ajouter un aliment</button></div>':'')+'</section>'
   }).join('');
   renderLibrary();
