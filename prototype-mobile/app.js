@@ -92,8 +92,67 @@ $('enter-journal').addEventListener('click', () => {
 });
 let libraryFromPlus=false;
 function page(name){if(name==='plus')showPlusHome();if(name!=='menus')libraryFromPlus=false;if(name==='menus')$('library-back-plus').hidden=!libraryFromPlus;document.body.classList.toggle('interior-page',name!=='home');document.querySelectorAll('.page').forEach(e=>e.hidden=e.id!==name);document.querySelectorAll('nav button').forEach(e=>{if(e.dataset.page===name)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current')});scrollTo(0,0);}
+
+// Sélecteurs visuels dans le formulaire : les <select> restent la source de vérité.
+let activeSpellPicker=null;
+function syncSpellPickerLabels(){
+  for(const key of ['family','unit']){
+    const select=$('food-'+key), label=$('food-'+key+'-value');
+    if(select&&label)label.textContent=select.selectedOptions[0]?.textContent||'Choisir';
+  }
+}
+function closeSpellPicker(restoreFocus=false){
+  const key=activeSpellPicker;
+  $('spell-picker-panel').hidden=true;
+  activeSpellPicker=null;
+  for(const k of ['family','unit'])$('food-'+k+'-trigger').setAttribute('aria-expanded','false');
+  if(restoreFocus&&key)$('food-'+key+'-trigger').focus();
+}
+function openSpellPicker(key){
+  if(activeSpellPicker===key){closeSpellPicker(true);return;}
+  activeSpellPicker=key;
+  const select=$('food-'+key), panel=$('spell-picker-panel'), list=$('spell-picker-options');
+  $('spell-picker-title').textContent=key==='family'?'Famille d’aliments':'Unité';
+  list.innerHTML='';
+  [...select.options].forEach((option,index)=>{
+    const button=document.createElement('button');
+    button.type='button';button.className='spell-picker-option';button.setAttribute('role','option');
+    button.setAttribute('aria-selected',String(select.selectedIndex===index));
+    button.textContent=option.textContent;
+    button.addEventListener('click',()=>{
+      select.value=option.value;
+      select.dispatchEvent(new Event('change',{bubbles:true}));
+      syncSpellPickerLabels();
+      closeSpellPicker(true);
+    });
+    list.append(button);
+  });
+  panel.hidden=false;
+  for(const k of ['family','unit'])$('food-'+k+'-trigger').setAttribute('aria-expanded',String(k===key));
+  const selected=list.querySelector('[aria-selected="true"]');
+  (selected||list.querySelector('button'))?.focus();
+  selected?.scrollIntoView({block:'nearest'});
+}
+for(const key of ['family','unit']){
+  $('food-'+key+'-trigger').addEventListener('click',()=>openSpellPicker(key));
+  $('food-'+key).addEventListener('change',syncSpellPickerLabels);
+}
+$('spell-picker-close').addEventListener('click',()=>closeSpellPicker(true));
+$('spell-picker-panel').addEventListener('keydown',e=>{
+  const opts=[...$('spell-picker-options').querySelectorAll('button')];
+  const at=opts.indexOf(document.activeElement);
+  if(e.key==='Escape'){e.preventDefault();closeSpellPicker(true);}
+  else if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+    e.preventDefault();opts[(at+(e.key==='ArrowDown'?1:-1)+opts.length)%opts.length]?.focus();
+  }else if(e.key==='Home'||e.key==='End'){
+    e.preventDefault();opts[e.key==='Home'?0:opts.length-1]?.focus();
+  }
+});
+$('editor').addEventListener('close',()=>closeSpellPicker(false));
+$('editor').addEventListener('cancel',()=>closeSpellPicker(false));
+
 function syncUnit(){const unit=$('food-unit').value;$('piece-weight-label').hidden=unit!=='piece';$('density-label').hidden=unit!=='ml'&&unit!=='cl';const f=$('food-form').elements;f.namedItem('pieceWeight').required=unit==='piece';f.namedItem('density').required=unit==='ml'||unit==='cl';const q=Number(f.namedItem('quantity').value),weight=Number(f.namedItem('pieceWeight').value),density=Number(f.namedItem('density').value);const grams=unit==='g'?q:unit==='piece'?q*weight:q*(unit==='cl'?10:1)*density;$('quantity-conversion').textContent=q>0&&grams>0?'Équivalent : '+Math.round(grams*10)/10+' g':'';}
-function openEditor(key,id=null){mealKey=key;editId=id;const item=items().find(i=>i.id===id);$('editor-title').textContent=(item?'Modifier':'Ajouter')+' — '+MEALS.find(m=>m[0]===key)[1];$('food-form').reset();if(item){for(const k of ['name','kcal','p','c','f'])$('food-form').elements.namedItem(k).value=item[k];const f=$('food-form').elements;f.namedItem('unit').value=item.unit||'g';f.namedItem('quantity').value=item.quantity||item.grams;f.namedItem('pieceWeight').value=item.pieceWeight||'';f.namedItem('density').value=item.density||1;$('food-family').value=familyOf(item);}syncUnit();$('editor').showModal();}
+function openEditor(key,id=null){mealKey=key;editId=id;const item=items().find(i=>i.id===id);$('editor-title').textContent=(item?'Modifier':'Ajouter')+' — '+MEALS.find(m=>m[0]===key)[1];$('food-form').reset();if(item){for(const k of ['name','kcal','p','c','f'])$('food-form').elements.namedItem(k).value=item[k];const f=$('food-form').elements;f.namedItem('unit').value=item.unit||'g';f.namedItem('quantity').value=item.quantity||item.grams;f.namedItem('pieceWeight').value=item.pieceWeight||'';f.namedItem('density').value=item.density||1;$('food-family').value=familyOf(item);}syncUnit();syncSpellPickerLabels();closeSpellPicker(false);$('editor').showModal();}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.page){page(b.dataset.page);return;}if(b.dataset.library){const food=db.library[Number(b.dataset.library)];if(food){journalExpanded=mealKey||'lunch';page('journal');openEditor(journalExpanded);for(const k of ['name','kcal','p','c','f'])$('food-form').elements.namedItem(k).value=food[k];$('food-family').value=familyOf(food);const f=$('food-form').elements;f.namedItem('unit').value=food.unit||'g';f.namedItem('quantity').value=food.unit==='piece'?1:food.unit==='cl'?10:100;f.namedItem('pieceWeight').value=food.pieceWeight||'';f.namedItem('density').value=food.density||1;syncUnit();}return;}if(b.dataset.journalToggle){journalExpanded=journalExpanded===b.dataset.journalToggle?null:b.dataset.journalToggle;render();return;}if(b.dataset.open){journalExpanded=b.dataset.open;render();page('journal');openEditor(b.dataset.open);return;}if(b.dataset.add){journalExpanded=b.dataset.add;openEditor(b.dataset.add);return;}if(b.dataset.edit){const item=items().find(i=>i.id===b.dataset.edit);if(item)openEditor(item.meal,item.id);return;}if(b.dataset.delete){if(confirm('Supprimer cet aliment ?'))update(r=>{r.items=r.items.filter(i=>i.id!==b.dataset.delete)});return;}});
 $('food-form').addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget.elements;const field=k=>f.namedItem(k).value;const unit=field('unit'),quantity=Number(field('quantity')),pieceWeight=Number(field('pieceWeight')),density=Number(field('density'));const grams=unit==='g'?quantity:unit==='piece'?quantity*pieceWeight:quantity*(unit==='cl'?10:1)*density;const v={id:editId||crypto.randomUUID(),meal:mealKey,name:field('name').trim(),family:field('family'),unit,quantity,pieceWeight:unit==='piece'?pieceWeight:null,density:unit==='ml'||unit==='cl'?density:null,grams,kcal:Number(field('kcal')),p:Number(field('p')),c:Number(field('c')),f:Number(field('f'))};if(!v.name||!Number.isFinite(v.grams)||v.grams<=0||['kcal','p','c','f'].some(k=>!Number.isFinite(v[k])||v[k]<0))return;update(r=>{r.items=r.items||[];const index=r.items.findIndex(i=>i.id===editId);if(index>=0)r.items[index]=v;else r.items.push(v)});const existing=db.library.findIndex(f=>norm(f.name)===norm(v.name));const food={name:v.name,family:v.family,kcal:v.kcal,p:v.p,c:v.c,f:v.f,unit:v.unit,pieceWeight:v.pieceWeight,density:v.density};if(existing>=0)db.library[existing]=food;else db.library.push(food);save();$('editor').close();journalExpanded=mealKey;page('journal');render();});
 $('cancel').onclick=()=>$('editor').close();
