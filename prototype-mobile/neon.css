@@ -478,3 +478,70 @@ body:not(.interior-page) #nutrition-app { padding: 0; }
 
 /* Garder la barre de navigation de l’application seule à l’écran. */
 vercel-live-feedback { display: none !important; }
+
+
+/* Lot design 01 — halos lumineux tactiles, sans modification du moteur. */
+:root {
+  --spell-pink: #ff48da;
+  --spell-gold: #ffe7a0;
+  --spell-violet: #a74bff;
+}
+.welcome-button,
+#home .datebar button,
+#home-meals .meal,
+#app-nav button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 160ms ease-out, filter 160ms ease-out,
+    box-shadow 180ms ease-out, background-color 180ms ease-out,
+    color 180ms ease-out, text-shadow 180ms ease-out;
+}
+.welcome-button::after {
+  box-shadow:
+    0 0 8px 2px #ff86e3b8,
+    0 0 23px 5px #f72ed68c,
+    0 0 37px 8px #a334f24d,
+    inset 0 0 15px #ffd58d61;
+}
+.welcome-button:is(:active, :focus-visible) {
+  filter: brightness(1.18);
+  text-shadow: 0 0 7px #fff3b9, 0 0 15px #ff4edc;
+}
+.welcome-button:is(:active, :focus-visible)::after {
+  opacity: 1;
+  box-shadow:
+    0 0 8px 3px #ffe7a0,
+    0 0 23px 7px #ff48dadd,
+    0 0 44px 12px #a74bff99,
+    inset 0 0 17px #ffe7a099;
+}
+#home .datebar button:active,
+#home-meals .meal:active,
+#app-nav button:active {
+  transform: scale(.97);
+  filter: brightness(1.24);
+  box-shadow:
+    inset 0 0 0 1px #ffe7a0,
+    inset 0 0 12px #ff48daaa,
+    0 0 10px 2px #ff48dabb,
+    0 0 23px 5px #a74bff80;
+}
+#app-nav button[aria-current="page"] {
+  box-shadow:
+    inset 0 0 0 1px #ffe7a0,
+    inset 0 0 13px #ff48daaa,
+    0 0 12px 2px #ff48da9e,
+    0 0 22px #a74bff55;
+}
+#home-meals .meal:focus-visible,
+#app-nav button:focus-visible,
+#home .datebar button:focus-visible {
+  outline: 2px solid var(--spell-gold);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-button,
+  #home .datebar button,
+  #home-meals .meal,
+  #app-nav button { transition: none; }
+}
