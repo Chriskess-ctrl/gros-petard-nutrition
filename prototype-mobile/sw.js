@@ -1,14 +1,15 @@
-const CACHE = 'gp-nutrition-prototype-neon-v4';
+const CACHE = 'gp-nutrition-prototype-neon-v5';
 const ENTRY = './index.html';
 const ART = [
   'welcome', 'crown', 'charms', 'flourish-left', 'flourish-right',
   'potion', 'weights', 'quill',
   'meal-breakfast', 'meal-snack-am', 'meal-lunch', 'meal-snack-pm', 'meal-dinner',
   'journal-breakfast', 'journal-snack-am', 'journal-lunch', 'journal-snack-pm', 'journal-dinner',
+  'editor-crest', 'editor-footer', 'editor-rule', 'editor-rune', 'editor-rail-left', 'editor-rail-right',
   'nav-hat', 'nav-grimoire', 'nav-cauldron', 'nav-hourglass', 'nav-crystals',
 ];
 const ASSETS = [
-  ENTRY, './style.css', './neon.css', './app.js', './suivi.js',
+  ENTRY, './style.css', './neon.css', './editor.css', './app.js', './suivi.js',
   './manifest.webmanifest', '../icon-192.png', '../icon-512.png',
   ...ART.map(name => './assets/' + name + '.webp'),
 ];
