@@ -1,0 +1,111 @@
+'use strict';
+const KEY='gp-nutrition-v2-ergonomic-prototype-only';
+const MEALS=[['breakfast','Petit-déjeuner'],['snack-am','Collation matin'],['lunch','Déjeuner'],['snack-pm','Collation après-midi'],['dinner','Dîner']];
+const $=id=>document.getElementById(id);
+const FAMILIES=['Fruits','Légumes','Viandes','Poissons et fruits de mer','Œufs','Féculents et céréales','Produits laitiers','Légumineuses','Oléagineux','Matières grasses','Boissons','Produits sucrés','Autres'];
+const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('fr');
+const familyOf=item=>item.family||'Autres';
+
+const isoDate=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
+const today=()=>isoDate(new Date());
+let day=today(),mealKey=null,editId=null,journalExpanded='breakfast',db={days:{},goals:{kcal:1700,p:80,c:225,f:53}};
+function readStoredData() {
+  try {
+    return JSON.parse(localStorage.getItem(KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+const stored = readStoredData();
+if (stored.days && typeof stored.days === 'object') db = stored;
+db.goals={kcal:1700,p:80,c:225,f:53,...(db.goals||{})};
+db.library=Array.isArray(db.library)?db.library:[];
+// Reconstitue les aliments saisis dans les anciennes versions du prototype.
+for(const record of Object.values(db.days)){for(const item of (record.items||[])){if(!db.library.some(f=>norm(f.name)===norm(item.name)))db.library.push({name:item.name,family:familyOf(item),kcal:item.kcal,p:item.p,c:item.c,f:item.f});}}
+$('food-family').innerHTML=FAMILIES.map(f=>'<option>'+f+'</option>').join('');
+$('family-filter').innerHTML='<option value="">Toutes les familles</option>'+FAMILIES.map(f=>'<option>'+f+'</option>').join('');
+// Le suivi écrit aussi dans cette sauvegarde pendant que le journal est ouvert.
+function nutritionSnapshot() {
+  const {weights, measurements} = readStoredData();
+  return {...db, weights, measurements};
+}
+const writeStoredData = data => localStorage.setItem(KEY, JSON.stringify(data));
+const save = () => writeStoredData(nutritionSnapshot());
+const data=()=>db.days[day]||{items:[],complete:false};
+const items=()=>data().items||[];
+const totals=arr=>arr.reduce((a,i)=>{const q=i.grams/100;for(const k of ['kcal','p','c','f'])a[k]+=i[k]*q;return a},{kcal:0,p:0,c:0,f:0});
+const fmt=n=>Math.round(n).toLocaleString('fr-FR');
+const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function update(fn){const record=structuredClone(data());fn(record);db.days[day]=record;save();render();window.dispatchEvent(new Event('gp:nutrition-updated'));}
+function renderLibrary(){const query=norm($('food-search').value.trim()),family=$('family-filter').value;const list=db.library.filter(f=>(!family||familyOf(f)===family)&&norm(f.name).includes(query)).sort((a,b)=>a.name.localeCompare(b.name,'fr',{sensitivity:'base'}));$('library-list').innerHTML=list.length?list.map(f=>'<article class="library-food"><div><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g</small></div><button data-library="'+db.library.indexOf(f)+'">Utiliser</button></article>').join(''):'<p class="library-empty">Aucun aliment trouvé. Ajoute un aliment depuis le journal pour le retrouver ici.</p>';}
+function render() {
+  const goal = db.goals;
+  const ring = (id, value, target) => {
+    const progress = Math.max(0, Math.min(100, value / target * 100));
+    const element = $(id);
+    element.style.setProperty('--progress', progress + '%');
+    element.setAttribute('aria-valuenow', String(Math.round(progress)));
+  };
+  $('day').value = day;
+  $('day-display').dateTime = day;
+  $('day-display').textContent = day.split('-').reverse().join('/');
+  $('journal-date').textContent = new Date(day + 'T12:00:00').toLocaleDateString('fr-FR', {dateStyle: 'full'});
+
+  const all = totals(items());
+  $('cal').textContent = fmt(all.kcal);
+  $('remain').textContent = fmt(goal.kcal - all.kcal);
+  $('complete').checked = !!data().complete;
+  ring('cal-ring', all.kcal, goal.kcal);
+
+  for (const [key, id] of [['p', 'protein'], ['c', 'carbs'], ['f', 'fat']]) {
+    $(id).textContent = fmt(all[key]) + ' g';
+    $(key + '-rest').textContent = fmt(goal[key] - all[key]) + ' g restants';
+    ring(key + '-ring', all[key], goal[key]);
+  }
+  for (const key of ['kcal', 'p', 'c', 'f']) $('goal-' + key).value = goal[key];
+
+  $('home-meals').innerHTML = MEALS.map(([key, label]) => {
+    const meal = totals(items().filter(item => item.meal === key));
+    return `<button type="button" class="meal" data-open="${key}">
+      <img src="assets/meal-${key}.webp" alt="">
+      <strong>${label}</strong>
+      <span class="right">${fmt(meal.kcal)} kcal <span aria-hidden="true">›</span></span>
+    </button>`;
+  }).join('');
+$('journal-day-total').textContent=fmt(all.kcal)+' / '+fmt(goal.kcal)+' kcal';$('journal-meals').innerHTML=MEALS.map(([key,label],idx)=>{const group=items().filter(i=>i.meal===key),t=totals(group),expanded=journalExpanded===key;const icon=['☕','🍎','🍽️','🍌','🌙'][idx];return '<section class="journal-meal'+(expanded?' is-open':'')+'"><button type="button" class="journal-meal-toggle" data-journal-toggle="'+key+'" aria-expanded="'+expanded+'"><span class="journal-meal-icon" aria-hidden="true">'+icon+'</span><span class="journal-meal-info"><strong>'+label+'</strong><small>'+group.length+' aliment(s) · '+fmt(t.kcal)+' kcal</small></span><span class="journal-chevron" aria-hidden="true">'+(expanded?'⌄':'›')+'</span></button>'+(expanded?'<div class="journal-meal-content">'+(group.length?group.map(i=>'<div class="food"><div><strong>'+safe(i.name)+'</strong><small>'+(i.quantity&&i.unit?fmt(i.quantity)+' '+(i.unit==='piece'?(i.quantity===1?'pièce':'pièces'):i.unit):fmt(i.grams)+' g')+' · '+fmt(i.kcal*i.grams/100)+' kcal</small></div><button data-edit="'+safe(i.id)+'" aria-label="Modifier '+safe(i.name)+'">✎</button><button data-delete="'+safe(i.id)+'" aria-label="Supprimer '+safe(i.name)+'">×</button></div>').join(''):'<p class="journal-empty">Aucun aliment enregistré</p>')+'<button type="button" class="primary journal-add" data-add="'+key+'">+ Ajouter un aliment</button></div>':'')+'</section>'}).join('');renderLibrary();}
+$('enter-journal').addEventListener('click', () => {
+  $('welcome').hidden = true;
+  $('nutrition-app').hidden = false;
+  $('app-nav').hidden = false;
+  document.body.classList.remove('on-welcome');
+  page('home');
+  $('home-title').focus({preventScroll: true});
+});
+let libraryFromPlus=false;
+function page(name){if(name==='plus')showPlusHome();if(name!=='menus')libraryFromPlus=false;if(name==='menus')$('library-back-plus').hidden=!libraryFromPlus;document.body.classList.toggle('interior-page',name!=='home');document.querySelectorAll('.page').forEach(e=>e.hidden=e.id!==name);document.querySelectorAll('nav button').forEach(e=>{if(e.dataset.page===name)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current')});scrollTo(0,0);}
+function syncUnit(){const unit=$('food-unit').value;$('piece-weight-label').hidden=unit!=='piece';$('density-label').hidden=unit!=='ml'&&unit!=='cl';const f=$('food-form').elements;f.namedItem('pieceWeight').required=unit==='piece';f.namedItem('density').required=unit==='ml'||unit==='cl';const q=Number(f.namedItem('quantity').value),weight=Number(f.namedItem('pieceWeight').value),density=Number(f.namedItem('density').value);const grams=unit==='g'?q:unit==='piece'?q*weight:q*(unit==='cl'?10:1)*density;$('quantity-conversion').textContent=q>0&&grams>0?'Équivalent : '+Math.round(grams*10)/10+' g':'';}
+function openEditor(key,id=null){mealKey=key;editId=id;const item=items().find(i=>i.id===id);$('editor-title').textContent=(item?'Modifier':'Ajouter')+' — '+MEALS.find(m=>m[0]===key)[1];$('food-form').reset();if(item){for(const k of ['name','kcal','p','c','f'])$('food-form').elements.namedItem(k).value=item[k];const f=$('food-form').elements;f.namedItem('unit').value=item.unit||'g';f.namedItem('quantity').value=item.quantity||item.grams;f.namedItem('pieceWeight').value=item.pieceWeight||'';f.namedItem('density').value=item.density||1;$('food-family').value=familyOf(item);}syncUnit();$('editor').showModal();}
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.page){page(b.dataset.page);return;}if(b.dataset.library){const food=db.library[Number(b.dataset.library)];if(food){journalExpanded=mealKey||'lunch';page('journal');openEditor(journalExpanded);for(const k of ['name','kcal','p','c','f'])$('food-form').elements.namedItem(k).value=food[k];$('food-family').value=familyOf(food);const f=$('food-form').elements;f.namedItem('unit').value=food.unit||'g';f.namedItem('quantity').value=food.unit==='piece'?1:food.unit==='cl'?10:100;f.namedItem('pieceWeight').value=food.pieceWeight||'';f.namedItem('density').value=food.density||1;syncUnit();}return;}if(b.dataset.journalToggle){journalExpanded=journalExpanded===b.dataset.journalToggle?null:b.dataset.journalToggle;render();return;}if(b.dataset.open){journalExpanded=b.dataset.open;render();page('journal');openEditor(b.dataset.open);return;}if(b.dataset.add){journalExpanded=b.dataset.add;openEditor(b.dataset.add);return;}if(b.dataset.edit){const item=items().find(i=>i.id===b.dataset.edit);if(item)openEditor(item.meal,item.id);return;}if(b.dataset.delete){if(confirm('Supprimer cet aliment ?'))update(r=>{r.items=r.items.filter(i=>i.id!==b.dataset.delete)});return;}});
+$('food-form').addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget.elements;const field=k=>f.namedItem(k).value;const unit=field('unit'),quantity=Number(field('quantity')),pieceWeight=Number(field('pieceWeight')),density=Number(field('density'));const grams=unit==='g'?quantity:unit==='piece'?quantity*pieceWeight:quantity*(unit==='cl'?10:1)*density;const v={id:editId||crypto.randomUUID(),meal:mealKey,name:field('name').trim(),family:field('family'),unit,quantity,pieceWeight:unit==='piece'?pieceWeight:null,density:unit==='ml'||unit==='cl'?density:null,grams,kcal:Number(field('kcal')),p:Number(field('p')),c:Number(field('c')),f:Number(field('f'))};if(!v.name||!Number.isFinite(v.grams)||v.grams<=0||['kcal','p','c','f'].some(k=>!Number.isFinite(v[k])||v[k]<0))return;update(r=>{r.items=r.items||[];const index=r.items.findIndex(i=>i.id===editId);if(index>=0)r.items[index]=v;else r.items.push(v)});const existing=db.library.findIndex(f=>norm(f.name)===norm(v.name));const food={name:v.name,family:v.family,kcal:v.kcal,p:v.p,c:v.c,f:v.f,unit:v.unit,pieceWeight:v.pieceWeight,density:v.density};if(existing>=0)db.library[existing]=food;else db.library.push(food);save();$('editor').close();journalExpanded=mealKey;page('journal');render();});
+$('cancel').onclick=()=>$('editor').close();
+$('food-unit').addEventListener('change',syncUnit);
+for(const k of ['quantity','pieceWeight','density'])$('food-form').elements.namedItem(k).addEventListener('input',syncUnit);
+$('food-search').addEventListener('input',renderLibrary);
+$('family-filter').addEventListener('change',renderLibrary);
+$('complete').onchange=e=>update(r=>r.complete=e.target.checked);
+$('day').onchange=e=>{if(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)){day=e.target.value;render();window.dispatchEvent(new Event('gp:nutrition-updated'));}};
+for(const [id,offset] of [['prev',-1],['next',1]])$(id).onclick=()=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+offset);day=isoDate(d);render();window.dispatchEvent(new Event('gp:nutrition-updated'));};
+$('export').onclick=()=>{const blob=new Blob([JSON.stringify({format:'prototype-mobile',...nutritionSnapshot()},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='gros-petard-prototype-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+// Plus : sous-pages et réglages.
+function showPlusHome(){$('plus-home').hidden=false;$('plus-detail').hidden=true;document.querySelectorAll('[data-plus-panel]').forEach(p=>p.hidden=true);}
+function showPlusDetail(name){if(name==='foods'){libraryFromPlus=true;page('menus');return;}$('plus-home').hidden=true;$('plus-detail').hidden=false;document.querySelectorAll('[data-plus-panel]').forEach(p=>p.hidden=p.dataset.plusPanel!==name);if(name==='prefs'){$('pref-unit').value=db.preferences?.unit||'g';$('pref-compact').checked=db.preferences?.compact!==false;}if(name==='reminders'){for(const [id,key] of [['remind-weight','weight'],['remind-measure','measure'],['remind-food','food']])$(id).checked=!!db.reminders?.[key];}window.scrollTo(0,0);}
+$('library-back-plus').addEventListener('click',()=>page('plus'));
+document.querySelectorAll('[data-plus-open]').forEach(b=>b.addEventListener('click',()=>showPlusDetail(b.dataset.plusOpen)));
+$('plus-back').addEventListener('click',()=>{showPlusHome();window.scrollTo(0,0)});
+$('save-goals').addEventListener('click',()=>{const values={};for(const k of ['kcal','p','c','f']){const n=Number($('goal-'+k).value);if(!Number.isFinite(n)||n<=0||n>(k==='kcal'?10000:1000)){$('goals-feedback').textContent='Vérifie les quatre valeurs : elles doivent être positives.';return;}values[k]=n;}db.goals=values;save();render();window.dispatchEvent(new Event('gp:nutrition-updated'));$('goals-feedback').textContent='Objectifs enregistrés et jauges mises à jour.';});
+$('save-reminders').addEventListener('click',()=>{db.reminders={weight:$('remind-weight').checked,measure:$('remind-measure').checked,food:$('remind-food').checked};save();$('reminders-feedback').textContent='Préférences conservées. Notifications non encore disponibles.';});
+$('save-prefs').addEventListener('click',()=>{db.preferences={unit:$('pref-unit').value,compact:$('pref-compact').checked};save();document.body.classList.toggle('gp-spacious',!db.preferences.compact);$('prefs-feedback').textContent='Préférences enregistrées.';});
+$('import-data').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;const feedback=$('backup-feedback');try{if(file.size>5e6)throw Error('Fichier trop volumineux (5 Mo maximum).');const incoming=JSON.parse(await file.text());if(!incoming||incoming.format!=='prototype-mobile'||!incoming.days||typeof incoming.days!=='object'||Array.isArray(incoming.days)||!incoming.goals||typeof incoming.goals!=='object'||!Array.isArray(incoming.library))throw Error('Ce fichier ne correspond pas à une sauvegarde compatible du prototype.');if(!confirm('Remplacer toutes les données de cette version par cette sauvegarde ?')){feedback.textContent='Importation annulée.';return;}db=incoming;db.goals={kcal:1700,p:80,c:225,f:53,...db.goals};db.library=db.library||[];writeStoredData(db);render();window.dispatchEvent(new Event('gp:nutrition-updated'));feedback.textContent='Sauvegarde importée. Les données sont restaurées.';}catch(err){feedback.textContent='Import impossible : '+err.message;}finally{e.target.value='';}});
+if(db.preferences?.compact===false)document.body.classList.add('gp-spacious');
+
+render();

@@ -1,0 +1,26 @@
+{
+  "id": "./index.html",
+  "name": "Gros Pétard — Nutrition",
+  "short_name": "Gros Pétard",
+  "lang": "fr",
+  "description": "Mon journal alimentaire et le suivi de ma progression.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#130519",
+  "theme_color": "#130519",
+  "icons": [
+    {
+      "src": "../icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "../icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
