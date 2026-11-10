@@ -804,3 +804,19 @@ body.interior-page:has(#journal:not([hidden])) #nutrition-app { max-width: var(-
   #editor #food-form { padding-left: 12px; padding-right: 12px; }
   #editor .actions { margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px; }
 }
+
+/* Sélecteurs enchantés du formulaire, intégrés au dialogue existant. */
+#editor .spell-field { min-width: 0; margin: 9px 0; }
+#editor .spell-label { display:block; margin-bottom:5px; color:#f5d9b4; font-size:.88rem; font-weight:650; }
+#editor .spell-native-select { position:absolute!important; width:1px!important; height:1px!important; opacity:0!important; pointer-events:none!important; }
+#editor .spell-picker-trigger { display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; min-height:46px; padding:9px 12px; border:1px solid #c79b78; border-radius:11px; background:#45234c; color:#fff2dc; text-align:left; font:inherit; }
+#editor .spell-picker-trigger span:last-child { color:#f4c68b; font-size:1.3rem; }
+#editor .spell-picker-trigger:focus-visible { outline:2px solid #ef9bdc; outline-offset:2px; }
+#editor .spell-picker-panel { position:absolute; z-index:15; inset:0; display:flex; flex-direction:column; background:#200b2d; border-radius:19px; overflow:hidden; }
+#editor .spell-picker-panel[hidden] { display:none!important; }
+#editor .spell-picker-header { display:flex; justify-content:space-between; align-items:center; flex-shrink:0; padding:16px; border-bottom:1px solid #b98680; background:#32143c; color:#ffe4a4; }
+#editor #spell-picker-close { min-width:44px; min-height:44px; border:1px solid #bb8c7e; border-radius:11px; background:#49224e; color:#ffe4a4; font-size:1.1rem; }
+#editor #spell-picker-options { overflow-y:auto; overscroll-behavior:contain; padding:8px 12px 18px; }
+#editor .spell-picker-option { display:block; width:100%; min-height:51px; margin:4px 0; padding:12px 15px; text-align:left; border:1px solid #85597f; border-radius:11px; background:#32163e; color:#f6e4d5; font:inherit; }
+#editor .spell-picker-option[aria-selected="true"] { border-color:#ffe3a2; background:#653066; color:#ffe5ae; box-shadow:inset 0 0 10px #ed71d455,0 0 8px #df67d344; }
+#editor .spell-picker-option:focus-visible { outline:2px solid #ffe5a2; outline-offset:1px; }
