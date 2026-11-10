@@ -915,3 +915,20 @@ body.interior-page:has(#journal:not([hidden])) #nutrition-app { max-width: var(-
 #editor .spell-picker-option:focus-visible { outline:2px solid #ffc7ed; outline-offset:1px; box-shadow:0 0 15px #ff61e1; }
 #editor .actions button { border-radius:16px; border-color:#ffc58d; box-shadow:inset 0 0 8px #ffa6df32,0 0 0 1px #ec8ac947,0 0 9px #f15bd35c; }
 #editor .actions button.primary { border:2px solid #ffb7ef; background:linear-gradient(125deg,#9a3d8c,#642075 60%,#8d2b81); box-shadow:inset 0 1px 3px #fff4d570,inset 0 0 15px #f86bd466,0 0 0 1px #f886dd85,0 0 12px #ff57d9c7,0 0 23px #d23bba61; }
+
+/* Cadre réellement dessiné, superposé à l'interface tactile. */
+#editor { position:relative; border:0; border-radius:22px; background:radial-gradient(ellipse at 18% 12%,#46134d 0%,transparent 48%),radial-gradient(ellipse at 95% 72%,#381046 0%,transparent 46%),#16051f; box-shadow:0 0 18px #f247cf8c,0 0 44px #a52c8c6b,inset 0 0 28px #ee45c31c; }
+#editor::before { content:""; position:absolute; inset:0; z-index:5; border:0; border-radius:0; background:url("assets/editor-ornate-frame.svg") center/100% 100% no-repeat; pointer-events:none; }
+#editor #food-form { position:relative; z-index:1; padding:23px 24px 0; }
+#editor .editor-ornament { height:16px; background:linear-gradient(90deg,transparent,#f6b36b,transparent) center/75% 1px no-repeat; }
+#editor .editor-heading { margin:0 -3px 12px; padding:4px 0 12px; background:transparent; border-bottom:1px solid #e8a86d; box-shadow:0 5px 10px -9px #ff7ad9; }
+#editor .editor-heading-art { width:62px; height:62px; filter:drop-shadow(0 0 8px #f655d6); }
+#editor .editor-heading #editor-title { font-size:clamp(1.08rem,4.35vw,1.65rem); letter-spacing:.005em; line-height:1.15; }
+#editor .spell-picker-panel { z-index:7; inset:18px 15px auto!important; max-height:calc(100% - 36px); background:radial-gradient(ellipse at top,#451251,#1b0627 80%); }
+#editor .spell-picker-panel::after { content:""; pointer-events:none; position:absolute; inset:3px; border:1px solid #e7a36c7a; border-radius:15px; }
+#editor .spell-picker-option { border:1px solid #c87eaa; box-shadow:inset 0 0 8px #e95bce2e,0 0 8px #a635a44d; }
+#editor .spell-picker-option[aria-selected="true"] { border:1.5px solid #ffe0a4; box-shadow:0 0 0 1px #ff89d4,0 0 15px #f94ad6,inset 0 0 15px #fb65d261; }
+#editor .actions { margin:14px -24px 0; padding:14px 24px max(18px,env(safe-area-inset-bottom)); background:linear-gradient(180deg,#2a0a35,#17051e); border-top:1px solid #e6a46f; }
+#editor .actions button { border-radius:999px; }
+#editor .actions button.primary { box-shadow:inset 0 1px 3px #fff4d58a,inset 0 0 15px #f86bd47a,0 0 0 1px #f886dd85,0 0 13px #ff57d9d9,0 0 24px #d23bba88; }
+@media(max-width:370px){#editor #food-form{padding-left:18px;padding-right:18px}#editor .actions{margin-left:-18px;margin-right:-18px;padding-left:18px;padding-right:18px}}
