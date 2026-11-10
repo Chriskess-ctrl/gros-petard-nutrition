@@ -8,7 +8,7 @@ const familyOf=item=>item.family||'Autres';
 
 const isoDate=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
 const today=()=>isoDate(new Date());
-let day=today(),mealKey=null,editId=null,journalExpanded='breakfast',db={days:{},goals:{kcal:1700,p:80,c:225,f:53}};
+let day=today(),mealKey=null,editId=null,journalExpanded=null,db={days:{},goals:{kcal:1700,p:80,c:225,f:53}};
 function readStoredData() {
   try {
     return JSON.parse(localStorage.getItem(KEY)) || {};
