@@ -545,3 +545,131 @@ vercel-live-feedback { display: none !important; }
   #home-meals .meal,
   #app-nav button { transition: none; }
 }
+
+
+/* Journal — Grimoire des Repas. Habillage uniquement, fonctions intactes. */
+body.interior-page:has(#journal:not([hidden])) {
+  background: radial-gradient(ellipse at 50% 0%, #391b49 0%, #1c0a28 36%, #100617 100%);
+  color: #fff0db;
+}
+body.interior-page:has(#journal:not([hidden])) #nutrition-app { max-width: var(--app-width); }
+#journal { color: #fff0df; }
+#journal .journal-heading {
+  align-items: center;
+  gap: 5px 14px;
+  margin: 5px 0 15px;
+  padding: 8px 2px 11px;
+  border-bottom: 1px solid #c7986888;
+}
+#journal .journal-heading h1 {
+  color: #ffe4a0;
+  font: 700 clamp(1.3rem, 5.8vw, 1.8rem)/1.15 Georgia, serif;
+  text-shadow: 0 0 12px #ef65d568;
+}
+#journal .journal-heading h1::before {
+  content: "✦";
+  color: #f2bb7a;
+  font-size: .67em;
+  margin-right: 7px;
+}
+#journal .journal-heading .muted { color: #e0c4db; font-size: .76rem; }
+#journal .journal-day-summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 14px 22px;
+  margin-bottom: 16px;
+  border: 1px solid #e0ad7b;
+  border-radius: 17px;
+  background: radial-gradient(ellipse at 40% 0%, #4b2056, #291134 70%);
+  box-shadow: inset 0 0 12px #f14dcb2b, 0 0 13px #c846b735;
+  color: #fbe9d1;
+}
+#journal .journal-day-summary strong {
+  color: #ffe6a3;
+  font-size: clamp(.8rem, 3.5vw, 1rem);
+  font-variant-numeric: tabular-nums;
+}
+#journal .journal-day-summary::after {
+  content: "";
+  position: absolute;
+  bottom: 10px;
+  left: 14px;
+  right: 14px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ffda91, #e65ed6 65%, #6d2c83);
+  box-shadow: 0 0 8px #ee56d37c;
+}
+#journal .journal-accordion { gap: 9px; }
+#journal .journal-meal {
+  border: 1px solid #c59a72;
+  border-radius: 16px;
+  background: linear-gradient(125deg, #36163f, #28102f 65%, #220b2b);
+  box-shadow: inset 0 0 10px #eb68d51a, 0 3px 10px #09031077;
+}
+#journal .journal-meal:has(.journal-meal-content:not([hidden])) {
+  border-color: #e8b98b;
+  box-shadow: inset 0 0 12px #eb68d52b, 0 0 12px #db4bc34d;
+}
+#journal .journal-meal-toggle {
+  min-height: 67px;
+  padding: 10px 12px;
+  color: #ffe7b4;
+  -webkit-tap-highlight-color: transparent;
+}
+#journal .journal-meal-toggle:active { background: #a735a326; }
+#journal .journal-meal-toggle:focus-visible {
+  outline: 2px solid #ffe7a0;
+  outline-offset: -3px;
+}
+#journal .journal-meal-icon { width: 36px; font-size: 1.55rem; }
+#journal .journal-meal-info strong {
+  color: #ffe4ac;
+  font: 700 clamp(.98rem, 4vw, 1.14rem)/1.2 Georgia, serif;
+}
+#journal .journal-meal-info small { color: #dbc4dd; font-size: .79rem; }
+#journal .journal-chevron { color: #f8c78f; }
+#journal .journal-meal-content {
+  border-top: 1px solid #c3938c80;
+  padding: 8px 12px 12px;
+  background: linear-gradient(180deg, #230c2f, #2b1235);
+}
+#journal .journal-meal-content .food {
+  padding: 10px;
+  margin: 6px 0;
+  border: 1px solid #7c527e;
+  border-radius: 12px;
+  background: #3a2046;
+  color: #fff1dc;
+}
+#journal .journal-meal-content .food small { color: #d8c5dd; }
+#journal .journal-meal-content .food button {
+  min-width: 44px;
+  min-height: 44px;
+  background: #4a2554;
+  border: 1px solid #c8998d;
+  color: #ffe7bd;
+}
+#journal .journal-meal-content .food button:active { background: #77356c; }
+#journal .journal-empty { color: #dbc7df; }
+#journal .journal-add {
+  min-height: 46px;
+  border: 1px solid #f1a8e5;
+  border-radius: 12px;
+  background: linear-gradient(115deg, #692064, #42144e);
+  box-shadow: inset 0 0 8px #ff83db60, 0 0 9px #e54bd344;
+  color: #fff1c8;
+  font-weight: 700;
+}
+#journal .journal-add:active {
+  background: #8b2982;
+  box-shadow: 0 0 16px #ff61e7a6;
+}
+@media (max-width: 370px) {
+  #journal .journal-heading { align-items: flex-start; }
+  #journal .journal-day-summary { grid-template-columns: 1fr; gap: 3px; }
+  #journal .journal-day-summary strong { white-space: normal; }
+}
