@@ -778,3 +778,38 @@ body.interior-page:has(#journal:not([hidden])) #nutrition-app { max-width: var(-
 @media(prefers-reduced-motion:no-preference) {
   #menus .library-food button,#menus .library-filters input,#menus .library-filters select { transition:border-color .18s ease,box-shadow .18s ease; }
 }
+
+
+/* Menu de famille défilant dans le thème grimoire */
+#menus .gp-family-picker { position:relative; min-width:0; margin-top:9px; }
+#menus .gp-native-family { position:absolute!important; width:1px!important; height:1px!important; opacity:0!important; pointer-events:none!important; margin:0!important; padding:0!important; border:0!important; }
+#menus .gp-family-trigger {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  width:100%; min-height:54px; padding:12px 15px; text-align:left;
+  color:#fff0dd; background:linear-gradient(145deg,#451a49,#300e3c);
+  border:1.5px solid #e8a86c; border-radius:15px; font:500 1rem system-ui,sans-serif;
+  box-shadow:inset 0 1px 6px rgba(255,112,220,.1),0 0 9px rgba(243,83,208,.17);
+}
+#menus .gp-family-trigger[aria-expanded=true] { border-color:#ffb7e8; box-shadow:0 0 15px rgba(255,83,218,.5); }
+#menus .gp-family-arrow { font-size:1.6rem; line-height:1; color:#ffd38b; }
+#menus .gp-family-options {
+  position:absolute; top:calc(100% + 7px); left:0; right:0; z-index:100;
+  max-height:min(46svh,340px); overflow-y:auto; overscroll-behavior:contain;
+  padding:8px; border-radius:17px; border:1.5px solid #eeb979;
+  background:linear-gradient(160deg,#32113e,#1c0929);
+  box-shadow:0 13px 35px #08020be0,0 0 19px #ef55d655;
+  scrollbar-color:#d96ac1 #31133d;
+}
+#menus .gp-family-options[hidden] { display:none!important; }
+#menus .gp-family-option {
+  display:block; width:100%; min-height:47px; margin:0 0 5px; padding:11px 14px;
+  text-align:left; color:#ffe5ca; font:500 .96rem system-ui,sans-serif;
+  border:1px solid #9d577d; border-radius:11px;
+  background:linear-gradient(110deg,#461a4d,#32123e);
+}
+#menus .gp-family-option:last-child { margin-bottom:0; }
+#menus .gp-family-option.selected,#menus .gp-family-option:focus-visible {
+  color:#fff1d0; border-color:#ffd18a; outline:0;
+  background:linear-gradient(110deg,#6e2b68,#4b1b56);
+  box-shadow:inset 0 0 12px #f37ada55,0 0 10px #f667d477;
+}
