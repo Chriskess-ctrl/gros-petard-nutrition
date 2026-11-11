@@ -335,3 +335,53 @@
 #editor [hidden] {
   display: none;
 }
+
+
+/* Mobile composition: keep ornamentation within the modal, never across fields. */
+#editor {
+  box-sizing: border-box;
+  width: min(calc(100vw - 16px), 470px);
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+  isolation: isolate;
+}
+#food-form {
+  max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+  overflow: hidden;
+}
+.editor-crest,
+.editor-footer-art,
+.editor-rule,
+.editor-rune {
+  object-fit: contain;
+  max-width: 100%;
+}
+.editor-frame {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 55% 55%, #3a0a3166, transparent 70%),
+    linear-gradient(90deg, #10040e, #24051f 50%, #10040e);
+  border-inline: 2px solid #d89245;
+  box-shadow: inset 0 0 0 1px #ffca7970, inset 0 0 12px #f451b02e;
+}
+.editor-heading {
+  min-width: 0;
+}
+#editor-fields {
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+#editor-fields > *,
+#editor .quantity-grid > *,
+#editor .formgrid > * {
+  min-width: 0;
+}
+.editor-action-buttons {
+  background: linear-gradient(180deg, #180516, #2d0929);
+}
+@media (max-width: 390px) {
+  #editor { --editor-gutter: 6.5%; }
+  .editor-heading { grid-template-columns: 48px minmax(0, 1fr) 44px; gap: 5px; }
+  #editor-title { font-size: clamp(1.08rem, 5vw, 1.3rem); }
+  .editor-action-buttons { gap: 9px; }
+  .editor-action-buttons button { font-size: 1.05rem; }
+}
