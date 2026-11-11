@@ -693,3 +693,88 @@ body.interior-page:has(#journal:not([hidden])) #nutrition-app { max-width: var(-
   #journal .journal-meal-icon { width: 44px; flex-basis: 44px; }
   #journal .journal-meal-icon img { width: 42px; height: 42px; }
 }
+
+
+/* Bibliothèque des aliments — habillage grimoire, sans modification du DOM ni des données. */
+#menus.page {
+  color: #ffe9c1;
+  background: radial-gradient(ellipse at 50% 0%, rgba(105,30,103,.28), transparent 52%), linear-gradient(180deg,#230b2c 0%,#16071e 100%);
+  min-height: calc(100svh - 165px);
+  border: 1px solid rgba(255,202,115,.63);
+  border-radius: 25px;
+  padding: 22px 17px 30px;
+  box-shadow: inset 0 0 0 4px rgba(255,185,91,.05), 0 0 19px rgba(245,70,212,.18);
+  position: relative;
+  isolation: isolate;
+}
+#menus.page::before {
+  content: ""; display:block; width: 96px; height: 13px; margin: -13px auto 10px;
+  background: radial-gradient(circle at center,#fff2cb 0 8%,#fa70e6 12% 25%,transparent 38%),
+              linear-gradient(90deg,transparent,#e8a94f 24%,#ff73e2 50%,#e8a94f 76%,transparent);
+  background-size: 100% 100%; filter:drop-shadow(0 0 7px #fa4fe1);
+  pointer-events:none;
+}
+#menus h1 {
+  margin: 8px 0 11px; font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem,7vw,2.15rem); line-height:1.2;
+  font-weight:700; color:#ffe4a3;
+  text-shadow:0 1px 0 #5a2441,0 0 13px rgba(250,113,209,.24);
+}
+#menus .library-help {
+  color:#e8c9df; font-size:.91rem; line-height:1.55;
+  margin:0 0 22px; max-width:38ch;
+}
+#menus .library-filters {
+  display:grid; grid-template-columns:minmax(0,1fr);
+  gap:17px; margin:0 0 22px;
+}
+#menus .library-filters label {
+  display:block; min-width:0; font-family:Georgia,"Times New Roman",serif;
+  font-size:1.08rem; font-weight:700; color:#ffe5b4;
+}
+#menus .library-filters input,
+#menus .library-filters select {
+  display:block; width:100%; min-width:0; min-height:54px;
+  margin-top:9px; padding:12px 15px; border-radius:15px;
+  border:1.5px solid #e8a86c;
+  background:linear-gradient(150deg,#451a49,#300e3c);
+  color:#fff0dd; font:500 1rem system-ui,-apple-system,sans-serif;
+  box-shadow:inset 0 1px 6px rgba(255,112,220,.1),0 0 9px rgba(243,83,208,.17);
+  outline-offset:3px; color-scheme:dark;
+}
+#menus .library-filters input::placeholder { color:#d2a9c7; opacity:1; }
+#menus .library-filters input:focus,
+#menus .library-filters select:focus,
+#menus .library-filters input:focus-visible,
+#menus .library-filters select:focus-visible {
+  outline:2px solid #ff8ce7; border-color:#ffe0a2;
+  box-shadow:0 0 0 4px rgba(252,103,215,.19),0 0 16px rgba(255,81,221,.55),inset 0 0 9px rgba(255,89,211,.2);
+}
+#menus .library-filters select { cursor:pointer; }
+#menus .library-food {
+  background:linear-gradient(130deg,#381340,#270d34);
+  border:1px solid #c89176; border-radius:16px;
+  padding:14px 12px; margin:10px 0;
+  box-shadow:0 0 12px rgba(240,77,199,.12);
+}
+#menus .library-food strong { color:#ffe4a7; font-family:Georgia,"Times New Roman",serif; font-size:1.04rem; }
+#menus .library-food small { color:#e0bcd8; line-height:1.45; }
+#menus .library-food button {
+  color:#ffe8bd; background:linear-gradient(145deg,#67235c,#431540);
+  border:1.5px solid #ffb8e9; border-radius:12px; min-height:42px;
+  box-shadow:0 0 10px rgba(255,82,211,.28);
+}
+#menus .library-food button:focus-visible { outline:2px solid #fff1cb; outline-offset:3px; }
+#menus .library-empty {
+  margin:18px 0 0; padding:20px 15px;
+  background:linear-gradient(135deg,rgba(110,39,106,.28),rgba(51,15,60,.2));
+  border:1px solid rgba(239,170,114,.45); border-radius:15px;
+  color:#f3d7e8; line-height:1.55;
+}
+@media(max-width:390px) {
+  #menus.page { padding:19px 14px 25px; border-radius:21px; }
+  #menus .library-filters input,#menus .library-filters select { min-height:52px; }
+}
+@media(prefers-reduced-motion:no-preference) {
+  #menus .library-food button,#menus .library-filters input,#menus .library-filters select { transition:border-color .18s ease,box-shadow .18s ease; }
+}
