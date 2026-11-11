@@ -813,3 +813,66 @@ body.interior-page:has(#journal:not([hidden])) #nutrition-app { max-width: var(-
   background:linear-gradient(110deg,#6e2b68,#4b1b56);
   box-shadow:inset 0 0 12px #f37ada55,0 0 10px #f667d477;
 }
+
+
+/* SUivi — cohérence avec Journal et Bibliothèque, éléments natifs conservés */
+#suivi.page {
+  color:#f8e4ce;
+  background:radial-gradient(ellipse at 50% 0%,rgba(122,40,122,.29),transparent 58%),linear-gradient(180deg,#220b2b,#16071f);
+  min-height:calc(100svh - 165px); padding:22px 16px 32px;
+  border:1px solid rgba(250,196,117,.63);border-radius:24px;
+  box-shadow:inset 0 0 0 3px rgba(255,186,99,.04),0 0 19px rgba(242,72,206,.17);
+}
+#suivi .tracking-dashboard h1,#suivi #tracking-detail h1 {
+  font:700 clamp(1.65rem,6.6vw,2.05rem)/1.25 Georgia,"Times New Roman",serif;
+  color:#ffe2a3;margin:5px 0 20px;text-shadow:0 0 13px rgba(255,121,215,.23);
+}
+#suivi .tracking-latest{gap:14px;margin:0 0 20px;}
+#suivi .latest-card,#suivi .track-stat,#suivi .tracking-summary,#suivi .track-chart {
+  background:linear-gradient(140deg,#3a1643,#270d34);
+  border:1.5px solid #d9a06e;border-radius:20px;
+  box-shadow:inset 0 0 14px rgba(245,104,204,.06),0 0 12px rgba(240,75,207,.12);
+  padding:17px 15px;gap:9px;
+}
+#suivi .latest-card>small {
+  font:700 1.06rem/1.35 Georgia,"Times New Roman",serif;color:#ffe2a9;
+}
+#suivi .latest-card>strong{color:#ffe5b5;font-size:1.7rem;}
+#suivi .latest-card>span,#suivi .latest-macros,#suivi .latest-measures,#suivi .latest-card div{color:#e9d0e0;}
+#suivi .latest-measures b {color:#ffe6b5;}
+#suivi .latest-card .quick-add,#suivi .tracking-actions button,#suivi .tracking-back,
+#suivi .tracking-tabs button,#suivi .tracking-form button {
+  color:#ffeac6;background:linear-gradient(135deg,#68245e,#401341);
+  border:1.5px solid #f6b8e7;border-radius:14px;
+  min-height:48px;padding:10px 13px;font-weight:700;
+  box-shadow:inset 0 0 9px rgba(255,111,225,.16),0 0 12px rgba(255,83,212,.3);
+  text-shadow:0 0 7px rgba(255,167,234,.24);
+}
+#suivi .tracking-actions{gap:8px;grid-template-columns:repeat(3,minmax(0,1fr));}
+#suivi .tracking-actions button{font-size:.82rem;line-height:1.25;padding:10px 5px;min-height:65px;}
+#suivi .latest-card .quick-add{align-self:flex-start;max-width:100%;white-space:normal;text-align:center;}
+#suivi .tracking-actions button:focus-visible,#suivi button:focus-visible,
+#suivi input:focus-visible,#suivi select:focus-visible {
+  outline:2px solid #fff1c8;outline-offset:3px;
+  box-shadow:0 0 0 4px rgba(253,106,216,.22),0 0 17px rgba(255,86,213,.52);
+}
+#suivi .tracking-tabs button[aria-pressed=true] {
+  color:#fff2ce;background:linear-gradient(130deg,#853477,#4a1955);
+  border-color:#ffe1a2;box-shadow:0 0 15px rgba(255,93,217,.52);
+}
+#suivi .tracking-form {
+  background:linear-gradient(135deg,#35143d,#230b31);
+  border:1px solid #d4a06f;border-radius:17px;padding:14px;
+}
+#suivi .tracking-form label,#suivi .compare-dates label {color:#ffe1b5;}
+#suivi .tracking-form input,#suivi .tracking-form select,#suivi .compare-dates input,
+#suivi #nutrition-window {
+  min-height:46px;background:#3d1947;color:#fff0de;
+  border:1px solid #dfa66f;border-radius:11px;padding:9px 10px;color-scheme:dark;
+}
+#suivi .tracking-panel,#suivi .tracking-summary,#suivi .track-chart{color:#f4d9e9;}
+@media(max-width:390px){
+ #suivi.page{padding:19px 13px 27px;border-radius:21px;}
+ #suivi .latest-card{padding:14px 12px;}
+ #suivi .tracking-actions button{font-size:.76rem;padding:9px 3px;}
+}
