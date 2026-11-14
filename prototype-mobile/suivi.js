@@ -65,8 +65,7 @@ function renderAnalysis(){
  const range=period('analysis'),db=read();
  $('analysis-window').value=analysisPrefs.window;
  $('analysis-selected-count').textContent='('+analysisPrefs.selected.length+')';
- document.querySelectorAll('[data-analysis-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.analysisPeriod===analysisPrefs.window)));
- document.querySelectorAll('[data-analysis-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.analysisMode===analysisPrefs.mode)));
+ $('analysis-mode-select').value=analysisPrefs.mode;
  $('analysis-selectors').innerHTML=ANALYSIS_OPTIONS.map(o=>'<label class="analysis-choice"><input type="checkbox" data-analysis-choice="'+o.id+'" '+(analysisPrefs.selected.includes(o.id)?'checked':'')+'><span class="analysis-swatch" style="background:'+o.color+'"></span>'+safe(o.label)+'</label>').join('');
  const selected=ANALYSIS_OPTIONS.filter(o=>analysisPrefs.selected.includes(o.id)).map(o=>({...o,entries:range.valid?analysisEntries(o,db,range):[]}));
  if(!selected.length){$('analysis-results').innerHTML='<p class="tracking-note">Sélectionne un ou plusieurs indicateurs pour voir leur évolution.</p>';return;}
@@ -108,8 +107,7 @@ $('analysis-results').addEventListener('click',e=>{const b=e.target.closest('[da
 $('analysis-clear').addEventListener('click',()=>{analysisPrefs.selected=[];saveAnalysisPrefs();renderAnalysis();});
 $('analysis-window').addEventListener('change',()=>{analysisPrefs.window=$('analysis-window').value;saveAnalysisPrefs();renderAnalysis();});
 for(const id of ['analysis-from','analysis-to'])$(id).addEventListener('change',renderAnalysis);
-document.querySelectorAll('[data-analysis-period]').forEach(b=>b.addEventListener('click',()=>{analysisPrefs.window=b.dataset.analysisPeriod;$('analysis-window').value=analysisPrefs.window;saveAnalysisPrefs();renderAnalysis();}));
-document.querySelectorAll('[data-analysis-mode]').forEach(b=>b.addEventListener('click',()=>{analysisPrefs.mode=b.dataset.analysisMode;saveAnalysisPrefs();renderAnalysis();}));
+$('analysis-mode-select').addEventListener('change',e=>{analysisPrefs.mode=e.target.value;saveAnalysisPrefs();renderAnalysis();});
 function render(){renderWeight();renderMeasure();renderNutrition();renderOverview();renderAnalysis();}
 window.addEventListener('gp:nutrition-updated',()=>{renderOverview();renderNutrition();});
 for(const id of ['weight','measure']){$(id+'-from').value=dayOffset(today(),-29);$(id+'-to').value=today();$(id+'-window').addEventListener('change',render);$(id+'-from').addEventListener('change',render);$(id+'-to').addEventListener('change',render);} $('measure-kind').innerHTML=KINDS.map(([key,label])=>'<option value="'+key+'">'+label+'</option>').join('');
