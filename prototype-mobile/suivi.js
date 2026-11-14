@@ -55,7 +55,7 @@ const ANALYSIS_OPTIONS=[
 ];
 const ANALYSIS_KEY='gp-analysis-preferences-v1';
 let analysisSelectedDate=null;
-let analysisPrefs=(()=>{try{const p=JSON.parse(localStorage.getItem(ANALYSIS_KEY));return {selected:Array.isArray(p?.selected)?p.selected:['weight','waist','glutes'],mode:['overview','overlay','separate'].includes(p?.mode)?p.mode:'overview',window:['7','15','30','custom'].includes(p?.window)?p.window:'30'};}catch{return {selected:['weight','waist','glutes'],mode:'overview',window:'30'};}})();
+let analysisPrefs=(()=>{try{const p=JSON.parse(localStorage.getItem(ANALYSIS_KEY));return {selected:Array.isArray(p?.selected)?p.selected:['weight','waist','glutes'],mode:['overview','overlay','separate','summary'].includes(p?.mode)?p.mode:'overview',window:['7','15','30','custom'].includes(p?.window)?p.window:'30'};}catch{return {selected:['weight','waist','glutes'],mode:'overview',window:'30'};}})();
 function saveAnalysisPrefs(){try{localStorage.setItem(ANALYSIS_KEY,JSON.stringify(analysisPrefs));}catch{}}
 function analysisEntries(option,db,range){
  const records=option.type==='weight'?db.weights||{}:option.type==='measure'?Object.fromEntries(Object.entries(db.measurements||{}).map(([d,v])=>[d,v?.[option.id]])):Object.fromEntries(Object.entries(db.days||{}).filter(([,r])=>Array.isArray(r?.items)&&r.items.length).map(([d,r])=>[d,nutritionTotals(r.items)[option.id]]));
@@ -64,6 +64,7 @@ function analysisEntries(option,db,range){
 function renderAnalysis(){
  const range=period('analysis'),db=read();
  $('analysis-window').value=analysisPrefs.window;
+ $('analysis-selected-count').textContent='('+analysisPrefs.selected.length+')';
  document.querySelectorAll('[data-analysis-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.analysisPeriod===analysisPrefs.window)));
  document.querySelectorAll('[data-analysis-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.analysisMode===analysisPrefs.mode)));
  $('analysis-selectors').innerHTML=ANALYSIS_OPTIONS.map(o=>'<label class="analysis-choice"><input type="checkbox" data-analysis-choice="'+o.id+'" '+(analysisPrefs.selected.includes(o.id)?'checked':'')+'><span class="analysis-swatch" style="background:'+o.color+'"></span>'+safe(o.label)+'</label>').join('');
@@ -73,7 +74,9 @@ function renderAnalysis(){
  const start=range.start,end=range.end;
  const cards=selected.map(o=>{const first=o.entries[0],last=o.entries.at(-1);return '<div class="analysis-stat"><span>'+safe(o.label)+'</span><strong>'+(first&&last?diff(first.value,last.value,o.unit):'—')+'</strong><small>'+(first&&last?displayDate(first.date)+' → '+displayDate(last.date):'Pas de relevé')+'</small></div>';}).join('');
  let charts='';
- if(analysisPrefs.mode==='separate'){
+ if(analysisPrefs.mode==='summary'){
+ charts='';
+ }else if(analysisPrefs.mode==='separate'){
  charts=selected.map(o=>'<div class="analysis-plot"><h3><span class="analysis-swatch" style="background:'+o.color+'"></span>'+safe(o.label)+'</h3><div id="analysis-chart-'+o.id+'"></div></div>').join('');
  }else{
  const available=selected.filter(o=>o.entries.length);
@@ -93,9 +96,11 @@ function renderAnalysis(){
  const details=selected.map(o=>{const e=o.entries.find(e=>e.date===chosen);return '<div class="analysis-stat"><span><i class="analysis-swatch" style="background:'+o.color+'"></i> '+safe(o.label)+'</span><strong>'+(e?fmt(e.value)+' '+o.unit:'—')+'</strong><small>'+(e?'Relevé du '+displayDate(chosen):'Aucun relevé ce jour')+'</small></div>';}).join('');
  charts+='<div class="analysis-overview-detail"><h3>Valeurs du '+(chosen?displayDate(chosen):'—')+'</h3><div class="chart-day-picker">'+dateButtons+'</div><div class="analysis-stats">'+details+'</div></div>';
  }
- $('analysis-results').innerHTML='<h2 class="analysis-subtitle">Bilan de la période</h2><div class="analysis-stats">'+cards+'</div><h2 class="analysis-subtitle">Mes courbes ('+selected.length+')</h2>'+charts;
+ $('analysis-results').innerHTML=analysisPrefs.mode==='summary'?'<h2 class="analysis-subtitle">Bilan de la période</h2><div class="analysis-stats">'+cards+'</div>':charts;
  if(analysisPrefs.mode==='separate')selected.forEach(o=>chart('analysis-chart-'+o.id,o.label,o.entries,o.unit,range));
 }
+$('analysis-filter-toggle').addEventListener('click',()=>{const panel=$('analysis-filter-panel');panel.hidden=!panel.hidden;$('analysis-filter-toggle').setAttribute('aria-expanded',String(!panel.hidden));});
+$('analysis-filter-done').addEventListener('click',()=>{$('analysis-filter-panel').hidden=true;$('analysis-filter-toggle').setAttribute('aria-expanded','false');});
 $('analysis-from').value=dayOffset(today(),-29);$('analysis-to').value=today();$('analysis-window').value=analysisPrefs.window;
 $('analysis-selectors').addEventListener('change',e=>{const id=e.target.dataset.analysisChoice;if(!id)return;analysisPrefs.selected=e.target.checked?[...new Set([...analysisPrefs.selected,id])]:analysisPrefs.selected.filter(v=>v!==id);saveAnalysisPrefs();renderAnalysis();});
 $('analysis-results').addEventListener('click',e=>{const b=e.target.closest('[data-analysis-date]');if(b){analysisSelectedDate=b.dataset.analysisDate;renderAnalysis();}});
