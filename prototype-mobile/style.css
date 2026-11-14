@@ -173,3 +173,16 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 
 /* Nutrition: le bilan de période prime sur le résumé déjà présent à l'accueil */
 #track-nutrition .nutrition-today-strip{display:flex;align-items:baseline;gap:5px 9px;flex-wrap:wrap;background:#244239;border:1px solid #ac8c6d;border-radius:12px;padding:9px 12px;margin:8px 0 11px;color:#f5e0c4}#track-nutrition .nutrition-today-label{font-size:.85rem}#track-nutrition .nutrition-today-strip>strong{font-size:1.15rem;color:#f7d6ad}#track-nutrition .nutrition-today-strip>span:not(.nutrition-today-label){font-size:.78rem}#track-nutrition .nutrition-today-strip>small{font-size:.68rem;opacity:.8;flex-basis:100%}#track-nutrition .nutrition-bilan-details>summary{padding:11px 12px}#track-nutrition .nutrition-bilan-details[open] .nutrition-insights{padding:0 10px 6px}#track-nutrition .nutrition-bilan-details[open]>.nutrition-extra{margin:0 12px 12px}#track-nutrition .nutrition-bilan-details[open]>.nutrition-extra:not([open]){margin-bottom:10px}#track-nutrition .nutrition-compact-summary .nutrition-table th,#track-nutrition .nutrition-compact-summary .nutrition-table td{padding-top:8px;padding-bottom:8px}#track-nutrition .nutrition-bilan-details[open]>.nutrition-insights{display:block}
+
+/* Nutrition ultra-compacte : bilan prioritaire, détails à la demande */
+#track-nutrition .nutrition-compact-head{margin-bottom:4px}
+#track-nutrition .nutrition-today-strip{margin:5px 0 9px;padding:7px 11px;min-height:0;align-items:center}
+#track-nutrition .nutrition-today-strip>small[hidden]{display:none}
+#track-nutrition .weight-period-buttons{margin:8px 0}
+#track-nutrition .nutrition-compact-summary{margin-top:9px}
+#track-nutrition .nutrition-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:10px 0 0}
+#track-nutrition .nutrition-quick-actions button{min-width:0;min-height:44px;border:1px solid #b99270;border-radius:12px;background:#28473f;color:#f8dcb6;font:inherit;font-size:clamp(.72rem,2.8vw,.9rem);padding:7px 3px;cursor:pointer}
+#track-nutrition .nutrition-quick-actions button[aria-expanded="true"]{background:#e7c79b;color:#321633;font-weight:700}
+#track-nutrition .nutrition-chart-details[hidden],#track-nutrition #nutrition-history-panel[hidden]{display:none!important}
+#track-nutrition .nutrition-chart-details{margin-top:10px}
+#track-nutrition #nutrition-history-panel{margin-top:10px}
