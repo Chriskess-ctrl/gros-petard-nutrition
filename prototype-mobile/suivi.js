@@ -92,9 +92,9 @@ function renderAnalysis(){
  const dates=[...new Set(selected.flatMap(o=>o.entries.map(e=>e.date)))].sort();
  const chosen=dates.includes(analysisSelectedDate)?analysisSelectedDate:dates.at(-1);
  analysisSelectedDate=chosen;
- const dateButtons=dates.map(d=>'<button type="button" data-analysis-date="'+d+'" aria-pressed="'+(d===chosen)+'">'+displayDate(d).slice(0,5)+'</button>').join('');
+ const dateButtons='<label class="analysis-date-select-label">Date <select id="analysis-date-select" aria-label="Choisir la date du relevé">'+dates.map(d=>'<option value="'+d+'" '+(d===chosen?'selected':'')+'>'+displayDate(d)+'</option>').join('')+'</select></label>';
  const details=selected.map(o=>{const e=o.entries.find(e=>e.date===chosen);return '<div class="analysis-stat"><span><i class="analysis-swatch" style="background:'+o.color+'"></i> '+safe(o.label)+'</span><strong>'+(e?fmt(e.value)+' '+o.unit:'—')+'</strong><small>'+(e?'Relevé du '+displayDate(chosen):'Aucun relevé ce jour')+'</small></div>';}).join('');
- charts+='<div class="analysis-overview-detail"><h3>Valeurs du '+(chosen?displayDate(chosen):'—')+'</h3><div class="chart-day-picker">'+dateButtons+'</div><div class="analysis-stats">'+details+'</div></div>';
+ charts+='<details class="analysis-overview-detail"><summary>Valeurs du '+(chosen?displayDate(chosen):'—')+' · voir le détail</summary><div class="analysis-date-picker">'+dateButtons+'</div><div class="analysis-stats">'+details+'</div></details>';
  }
  $('analysis-results').innerHTML=analysisPrefs.mode==='summary'?'<h2 class="analysis-subtitle">Bilan de la période</h2><div class="analysis-stats">'+cards+'</div>':charts;
  if(analysisPrefs.mode==='separate')selected.forEach(o=>chart('analysis-chart-'+o.id,o.label,o.entries,o.unit,range));
@@ -103,6 +103,7 @@ $('analysis-filter-toggle').addEventListener('click',()=>{const panel=$('analysi
 $('analysis-filter-done').addEventListener('click',()=>{$('analysis-filter-panel').hidden=true;$('analysis-filter-toggle').setAttribute('aria-expanded','false');});
 $('analysis-from').value=dayOffset(today(),-29);$('analysis-to').value=today();$('analysis-window').value=analysisPrefs.window;
 $('analysis-selectors').addEventListener('change',e=>{const id=e.target.dataset.analysisChoice;if(!id)return;analysisPrefs.selected=e.target.checked?[...new Set([...analysisPrefs.selected,id])]:analysisPrefs.selected.filter(v=>v!==id);saveAnalysisPrefs();renderAnalysis();});
+$('analysis-results').addEventListener('change',e=>{if(e.target.id==='analysis-date-select'){analysisSelectedDate=e.target.value;renderAnalysis();const detail=$('analysis-results').querySelector('.analysis-overview-detail');if(detail)detail.open=true;}});
 $('analysis-results').addEventListener('click',e=>{const b=e.target.closest('[data-analysis-date]');if(b){analysisSelectedDate=b.dataset.analysisDate;renderAnalysis();}});
 $('analysis-clear').addEventListener('click',()=>{analysisPrefs.selected=[];saveAnalysisPrefs();renderAnalysis();});
 $('analysis-window').addEventListener('change',()=>{analysisPrefs.window=$('analysis-window').value;saveAnalysisPrefs();renderAnalysis();});
