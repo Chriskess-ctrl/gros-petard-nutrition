@@ -27,11 +27,8 @@ function chart(target,title,entries,unit,range){
  const x=date=>left+(w-left-right)*(new Date(date+'T12:00:00')-new Date(start+'T12:00:00'))/Math.max(1,(days-1)*86400000);
  const y=value=>top+(h-top-bottom)*(high-value)/(high-low);
  const points=entries.map(e=>'<circle cx="'+x(e.date)+'" cy="'+y(e.value)+'" r="'+(e.date===selected?5.5:4)+'" fill="'+(e.date===selected?'#ffca7c':'#5de1c1')+'" stroke="#371536" stroke-width="1.5"><title>'+displayDate(e.date)+' : '+fmt(e.value)+' '+unit+'</title></circle>').join('');
- // Ne pas relier des journées non renseignées.
- const segments=[];let current=[];
- for(let i=0;i<days;i++){const date=dayOffset(start,i),e=byDate.get(date);if(!e){if(current.length>1)segments.push(current);current=[];continue;}current.push(x(date)+','+y(e.value));}
- if(current.length>1)segments.push(current);
- const lines=segments.map(p=>'<polyline fill="none" stroke="#5de1c1" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" points="'+p.join(' ')+'"/>').join('');
+ // Relier finement les relevés existants, sans créer de valeur pour les dates sans saisie.
+ const lines=entries.length>1?'<polyline fill="none" stroke="#5de1c1" stroke-opacity=".85" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" points="'+entries.map(e=>x(e.date)+','+y(e.value)).join(' ')+'"/>':'';
  const ticks=Array.from(new Set([0,Math.floor((days-1)/2),days-1])).map(i=>{const date=dayOffset(start,i);return '<text x="'+x(date)+'" y="181" text-anchor="middle" font-size="11" fill="#f4d9b1">'+displayDate(date).slice(0,5)+'</text>';}).join('');
  const grid=[0,.5,1].map(t=>{const v=low+(high-low)*t;return '<line x1="'+left+'" y1="'+y(v)+'" x2="'+(w-right)+'" y2="'+y(v)+'" stroke="#ad8caa" stroke-opacity=".3" stroke-dasharray="3 4"/><text x="1" y="'+(y(v)+3)+'" font-size="10" fill="#f4d9b1">'+fmt(v)+'</text>';}).join('');
  const selector=entries.map(e=>'<button type="button" data-chart-target="'+target+'" data-chart-date="'+e.date+'" aria-pressed="'+(e.date===selected)+'">'+displayDate(e.date).slice(0,5)+'</button>').join('');
