@@ -23,6 +23,8 @@ db.library=Array.isArray(db.library)?db.library:[];
 db.deletedLibraryNames=Array.isArray(db.deletedLibraryNames)?db.deletedLibraryNames:[];
 db.libraryFavorites=Array.isArray(db.libraryFavorites)?db.libraryFavorites:[];
 let libraryFilter='all',libraryShowAll=false,libraryOpen=null,libraryEditIndex=null;
+const LIBRARY_FAMILY_PREF='gp-library-selected-family';
+try { const savedFamily=localStorage.getItem(LIBRARY_FAMILY_PREF)||''; if(FAMILIES.includes(savedFamily)) $('family-filter').value=savedFamily; } catch {}
 // Aliments de démarrage : ne jamais écraser les valeurs personnelles ni recréer un aliment supprimé.
 const MEAT_STARTERS=[
  {name:'Blanc de poulet',raw:{kcal:110,p:23,c:0,f:1.8},cooked:{kcal:165,p:31,c:0,f:3.6}},
@@ -103,13 +105,13 @@ function renderLibrary(){
  const chips=[['all','Tous'],['favorites','⭐ Favoris'],['recent','🕘 Récents']];
  $('library-chips').innerHTML=chips.map(([id,label])=>'<button type="button" data-library-filter="'+id+'" aria-pressed="'+(libraryFilter===id)+'">'+label+'</button>').join('');
  $('library-count').textContent=list.length+' aliment'+(list.length>1?'s':'');
- const visible=(libraryShowAll||query)?list:list.slice(0,5);
+ const visible=(libraryShowAll||query||family)?list:list.slice(0,5);
  $('library-list').innerHTML=visible.length?visible.map(f=>{
   const index=db.library.indexOf(f),expanded=libraryOpen===norm(f.name),favorite=favs.includes(norm(f.name));
   return '<article class="library-food library-food-compact"><div class="library-food-head"><button type="button" class="library-food-main" data-library-expand="'+index+'" aria-expanded="'+expanded+'"><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g'+(f.variants?' cru · '+fmt(f.variants.cooked.kcal)+' cuit':'')+'</small></button><button type="button" class="library-star" data-library-favorite="'+index+'" aria-label="'+(favorite?'Retirer des favoris':'Ajouter aux favoris')+'" aria-pressed="'+favorite+'">'+(favorite?'★':'☆')+'</button><button type="button" class="library-expand" data-library-expand="'+index+'" aria-label="Détails de '+safe(f.name)+'">'+(expanded?'⌃':'⌄')+'</button></div>'+
   (expanded?'<div class="library-food-details"><p>Pour 100 g : '+fmt(f.kcal)+' kcal · P '+fmt(f.p)+' g · G '+fmt(f.c)+' g · L '+fmt(f.f)+' g</p><div class="library-food-actions"><button type="button" data-library="'+index+'">Utiliser</button><button type="button" data-library-edit="'+index+'">Modifier</button><button type="button" data-library-delete="'+index+'">Supprimer</button></div></div>':'')+'</article>';
  }).join(''):'<p class="library-empty">Aucun aliment trouvé. Tu peux en ajouter un à ta bibliothèque.</p>';
- $('library-more').hidden=!!query||list.length<=5;
+ $('library-more').hidden=!!query||!!family||list.length<=5;
  $('library-more').textContent=libraryShowAll?'Afficher moins':'Voir tous les aliments ('+list.length+')';
 }
 
@@ -354,7 +356,7 @@ $('library-add-form').addEventListener('submit',e=>{
   save();renderLibrary();$('library-add-dialog').close();
 });
 $('food-search').addEventListener('input',renderLibrary);
-$('family-filter').addEventListener('change',renderLibrary);
+$('family-filter').addEventListener('change',()=>{libraryShowAll=false;libraryOpen=null;try{localStorage.setItem(LIBRARY_FAMILY_PREF,$('family-filter').value);}catch{}renderLibrary();});
 $('complete').onchange=e=>update(r=>r.complete=e.target.checked);
 $('day').onchange=e=>{if(/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)){day=e.target.value;render();window.dispatchEvent(new Event('gp:nutrition-updated'));}};
 for(const [id,offset] of [['prev',-1],['next',1]])$(id).onclick=()=>{const d=new Date(day+'T12:00:00');d.setDate(d.getDate()+offset);day=isoDate(d);render();window.dispatchEvent(new Event('gp:nutrition-updated'));};
