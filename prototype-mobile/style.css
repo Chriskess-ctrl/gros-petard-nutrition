@@ -98,3 +98,20 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 
 /* Journal compact: cinq repas, un seul déplié à la fois */
 #journal .journal-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}#journal .journal-heading h1{margin:0;font-size:1.4rem}#journal .journal-heading .muted{font-size:.76rem;margin:0;text-transform:capitalize}#journal .journal-day-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#243f39;border:1px solid #967b57;border-radius:12px;padding:11px 13px;margin-bottom:12px;color:#f7e1b9;font-size:.85rem}#journal .journal-day-summary strong{white-space:nowrap}#journal .journal-accordion{display:grid;gap:8px}#journal .journal-meal{background:#243f39;border:1px solid #967b57;border-radius:12px;overflow:hidden}#journal .journal-meal-toggle{width:100%;min-height:64px;border:0;background:transparent;color:#f7e1b9;display:flex;align-items:center;gap:11px;text-align:left;padding:9px 12px}#journal .journal-meal-toggle:focus-visible{outline:3px solid #f1c88a;outline-offset:-3px}#journal .journal-meal-icon{font-size:1.4rem;width:32px;text-align:center;flex-shrink:0}#journal .journal-meal-info{display:grid;gap:3px;flex:1;min-width:0}#journal .journal-meal-info strong{font-size:.95rem}#journal .journal-meal-info small{font-size:.77rem;color:#c4d1c6}#journal .journal-chevron{font-size:1.35rem;color:#f1d2a3}#journal .journal-meal-content{padding:4px 12px 12px;border-top:1px solid #647366}#journal .journal-meal-content .food{margin:6px 0;padding:8px 0;display:flex;align-items:center;gap:8px}#journal .journal-meal-content .food>div{flex:1;min-width:0}#journal .journal-meal-content .food small{display:block}#journal .journal-empty{font-size:.83rem;color:#c9d1c9;margin:10px 0}#journal .journal-add{display:block;width:100%;min-height:41px;margin-top:9px}#journal .journal-meal-content .food button{min-width:34px;min-height:34px}@media(max-width:390px){#journal .journal-day-summary{font-size:.77rem}#journal .journal-heading .muted{font-size:.72rem}}
+
+/* Ajout direct depuis la bibliothèque, sans modifier les repas */
+#menus .library-add-open{display:block;width:100%;margin:14px 0 18px;padding:14px;border:1.5px solid #f6a8eb;border-radius:16px;background:linear-gradient(110deg,#43143f,#7e287b);color:#ffe4b1;font-weight:700;font-size:1rem;box-shadow:0 0 14px #f433b066;cursor:pointer}
+#menus .library-food-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+#menus .library-food-actions button{min-height:42px}
+.library-add-dialog{box-sizing:border-box;width:min(94vw,460px);max-height:min(85dvh,760px);overflow:auto;padding:20px;border:2px solid #e7b46e;border-radius:22px;background:linear-gradient(160deg,#361038,#1c0928);color:#ffe4b1;box-shadow:0 0 30px #f13cb877}
+.library-add-dialog::backdrop{background:#0c0614c9}
+.library-add-dialog .library-add-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.library-add-dialog h2{font-size:1.4rem;margin:0;color:#ffe4b1}
+.library-add-dialog p{font-size:.9rem;color:#e6cbdc}
+.library-add-dialog label{display:grid;gap:6px;margin:12px 0;color:#ffe4b1;font-weight:600}
+.library-add-dialog input,.library-add-dialog select{box-sizing:border-box;width:100%;min-width:0;min-height:47px;padding:10px 12px;border:1px solid #df9cbd;border-radius:12px;background:#3e1b43;color:#fff1e4;font:inherit}
+.library-add-dialog .library-add-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.library-add-dialog .library-add-actions{display:flex;gap:12px;margin-top:18px}
+.library-add-dialog button{border:1px solid #e6ae74;border-radius:12px;background:#4a1c4b;color:#ffe4b1;padding:11px 15px;min-height:44px;font:inherit}
+.library-add-dialog .library-add-actions button{flex:1}
+.library-add-dialog .library-add-actions button[type=submit]{border-color:#ffacee;background:#802b79;box-shadow:0 0 13px #f83dba88}
