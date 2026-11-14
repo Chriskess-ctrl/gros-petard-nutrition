@@ -177,7 +177,7 @@
         <label id="piece-weight-label" hidden>Poids moyen par pièce (g)<input name="pieceWeight" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
         <label id="density-label" hidden>Densité (g par ml)<input name="density" type="number" min="0.01" step="0.01" inputmode="decimal" value="1"></label>
         <p id="quantity-conversion" aria-live="polite"></p>
-        <div class="editor-nutrition">
+        <section id="meal-live-summary" class="meal-live-summary" aria-live="polite"><small>Pour la quantité consommée</small><strong id="meal-live-kcal">— kcal</strong><div id="meal-live-macros">Renseigne un aliment et une quantité.</div></section><button type="button" id="meal-nutrition-toggle" class="meal-nutrition-toggle" aria-expanded="true">Masquer les valeurs pour 100 g</button><div class="editor-nutrition" id="meal-nutrition-fields">
           <img class="editor-rune" src="assets/editor-rune.webp" alt="" width="928" height="48">
           <fieldset>
             <legend>Valeurs nutritionnelles pour 100 g</legend>
