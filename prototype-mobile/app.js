@@ -24,6 +24,7 @@ db.deletedLibraryNames=Array.isArray(db.deletedLibraryNames)?db.deletedLibraryNa
 // Reconstitue les aliments saisis dans les anciennes versions du prototype.
 for(const record of Object.values(db.days)){for(const item of (record.items||[])){if(!db.deletedLibraryNames.includes(norm(item.name))&&!db.library.some(f=>norm(f.name)===norm(item.name)))db.library.push({name:item.name,family:familyOf(item),kcal:item.kcal,p:item.p,c:item.c,f:item.f});}}
 $('food-family').innerHTML=FAMILIES.map(f=>'<option>'+f+'</option>').join('');
+$('library-add-family').innerHTML=FAMILIES.map(f=>'<option>'+f+'</option>').join('');
 $('family-filter').innerHTML='<option value="">Toutes les familles</option>'+FAMILIES.map(f=>'<option>'+f+'</option>').join('');
 // Le suivi écrit aussi dans cette sauvegarde pendant que le journal est ouvert.
 function nutritionSnapshot() {
@@ -225,6 +226,25 @@ $('cancel').onclick=()=>$('editor').close();
 $('editor-close').onclick=()=>$('editor').close();
 $('food-unit').addEventListener('change',syncUnit);
 for(const k of ['quantity','pieceWeight','density'])$('food-form').elements.namedItem(k).addEventListener('input',syncUnit);
+$('library-add-open').addEventListener('click',()=>{$('library-add-form').reset();$('library-add-dialog').showModal();});
+$('library-add-close').addEventListener('click',()=>$('library-add-dialog').close());
+$('library-add-cancel').addEventListener('click',()=>$('library-add-dialog').close());
+$('library-add-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const form=e.currentTarget;
+  const name=form.elements.namedItem('name').value.trim();
+  if(!name){alert('Indique le nom de l’aliment.');return;}
+  if(db.library.some(f=>norm(f.name)===norm(name))){alert('Cet aliment existe déjà dans la bibliothèque.');return;}
+  const food={name,family:form.elements.namedItem('family').value};
+  for(const key of ['kcal','p','c','f']){
+    const value=Number(form.elements.namedItem(key).value);
+    if(!Number.isFinite(value)||value<0){alert('Vérifie les valeurs nutritionnelles.');return;}
+    food[key]=value;
+  }
+  db.library.push(food);
+  db.deletedLibraryNames=db.deletedLibraryNames.filter(n=>n!==norm(name));
+  save();renderLibrary();$('library-add-dialog').close();
+});
 $('food-search').addEventListener('input',renderLibrary);
 $('family-filter').addEventListener('change',renderLibrary);
 $('complete').onchange=e=>update(r=>r.complete=e.target.checked);
