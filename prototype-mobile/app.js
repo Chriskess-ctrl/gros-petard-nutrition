@@ -39,7 +39,7 @@ const totals=arr=>arr.reduce((a,i)=>{const q=i.grams/100;for(const k of ['kcal',
 const fmt=n=>Math.round(n).toLocaleString('fr-FR');
 const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function update(fn){const record=structuredClone(data());fn(record);db.days[day]=record;save();render();window.dispatchEvent(new Event('gp:nutrition-updated'));}
-function renderLibrary(){const query=norm($('food-search').value.trim()),family=$('family-filter').value;const list=db.library.filter(f=>(!family||familyOf(f)===family)&&norm(f.name).includes(query)).sort((a,b)=>a.name.localeCompare(b.name,'fr',{sensitivity:'base'}));$('library-list').innerHTML=list.length?list.map(f=>'<article class="library-food"><div><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g</small></div><div class="library-food-actions"><button data-library="'+db.library.indexOf(f)+'">Utiliser</button><button type="button" data-library-delete="'+db.library.indexOf(f)+'" aria-label="Supprimer '+safe(f.name)+'">Supprimer</button></div></article>').join(''):'<p class="library-empty">Aucun aliment trouvé. Ajoute un aliment depuis le journal pour le retrouver ici.</p>';}
+function renderLibrary(){const query=norm($('food-search').value.trim()),family=$('family-filter').value;const list=db.library.filter(f=>(!family||familyOf(f)===family)&&norm(f.name).includes(query)).sort((a,b)=>a.name.localeCompare(b.name,'fr',{sensitivity:'base'}));$('library-list').innerHTML=list.length?list.map(f=>'<article class="library-food"><div><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g</small></div><div class="library-food-actions"><button data-library="'+db.library.indexOf(f)+'">Utiliser</button><button type="button" data-library-delete="'+db.library.indexOf(f)+'" aria-label="Supprimer '+safe(f.name)+'">Supprimer</button></div></article>').join(''):'<p class="library-empty">Aucun aliment trouvé. Utilise « + Ajouter un aliment » pour commencer ta bibliothèque.</p>';}
 function render() {
   const goal = db.goals;
   const ring = (id, value, target) => {
@@ -226,7 +226,9 @@ $('cancel').onclick=()=>$('editor').close();
 $('editor-close').onclick=()=>$('editor').close();
 $('food-unit').addEventListener('change',syncUnit);
 for(const k of ['quantity','pieceWeight','density'])$('food-form').elements.namedItem(k).addEventListener('input',syncUnit);
-$('library-add-open').addEventListener('click',()=>{$('library-add-form').reset();$('library-add-dialog').showModal();});
+function syncLibraryAddUnit(){const unit=$('library-add-unit').value;const piece=$('library-add-piece-label'),density=$('library-add-density-label');piece.hidden=unit!=='piece';density.hidden=unit!=='ml'&&unit!=='cl';piece.querySelector('input').required=unit==='piece';density.querySelector('input').required=unit==='ml'||unit==='cl';}
+$('library-add-unit').addEventListener('change',syncLibraryAddUnit);
+$('library-add-open').addEventListener('click',()=>{$('library-add-form').reset();syncLibraryAddUnit();$('library-add-dialog').showModal();});
 $('library-add-close').addEventListener('click',()=>$('library-add-dialog').close());
 $('library-add-cancel').addEventListener('click',()=>$('library-add-dialog').close());
 $('library-add-form').addEventListener('submit',e=>{
@@ -235,7 +237,12 @@ $('library-add-form').addEventListener('submit',e=>{
   const name=form.elements.namedItem('name').value.trim();
   if(!name){alert('Indique le nom de l’aliment.');return;}
   if(db.library.some(f=>norm(f.name)===norm(name))){alert('Cet aliment existe déjà dans la bibliothèque.');return;}
-  const food={name,family:form.elements.namedItem('family').value};
+  const unit=form.elements.namedItem('unit').value;
+  const pieceWeight=Number(form.elements.namedItem('pieceWeight').value);
+  const density=Number(form.elements.namedItem('density').value);
+  if(unit==='piece'&&(!Number.isFinite(pieceWeight)||pieceWeight<=0)){alert('Indique le poids d’une pièce.');return;}
+  if((unit==='ml'||unit==='cl')&&(!Number.isFinite(density)||density<=0)){alert('Indique une densité valide.');return;}
+  const food={name,family:form.elements.namedItem('family').value,unit,pieceWeight:unit==='piece'?pieceWeight:null,density:unit==='ml'||unit==='cl'?density:null};
   for(const key of ['kcal','p','c','f']){
     const value=Number(form.elements.namedItem(key).value);
     if(!Number.isFinite(value)||value<0){alert('Vérifie les valeurs nutritionnelles.');return;}
