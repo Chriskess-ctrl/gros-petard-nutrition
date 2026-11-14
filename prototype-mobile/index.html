@@ -105,7 +105,7 @@
 <select id="nutrition-window" class="weight-native-select" aria-label="Période"><option value="7">7 jours</option><option value="15">15 jours</option><option value="30" selected>30 jours</option><option value="custom">Dates personnalisées</option></select>
 <div id="nutrition-custom" class="compare-dates" hidden><label>Du<input id="nutrition-from" type="date"></label><label>Au<input id="nutrition-to" type="date"></label></div><p id="nutrition-period-error" class="tracking-note" role="status" hidden></p>
 <div id="nutrition-chart"></div>
-<details class="focus-extra"><summary>Moyennes protéines, glucides et lipides</summary><p class="tracking-note">Les moyennes excluent les journées non marquées comme complètes.</p><div id="nutrition-summary" class="tracking-summary"></div></details>
+<details class="focus-extra" open><summary>📊 Mon bilan nutritionnel</summary><p class="tracking-note">Moyennes calculées uniquement sur les journées marquées comme complètes.</p><div id="nutrition-summary" class="nutrition-insights" aria-live="polite"></div></details>
 <button type="button" class="primary weight-add" id="nutrition-go-journal">+ Ajouter un aliment au journal</button>
 <div id="nutrition-history-panel" hidden><h2>Historique journalier</h2><div id="nutrition-history"></div></div>
 </div><div id="track-analysis" class="tracking-panel focus-panel" hidden>
