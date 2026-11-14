@@ -1,4 +1,4 @@
-const CACHE = 'gp-nutrition-prototype-neon-v5';
+const CACHE = 'gp-nutrition-prototype-neon-v6';
 const ENTRY = './index.html';
 const ART = [
   'welcome', 'crown', 'charms', 'flourish-left', 'flourish-right',
