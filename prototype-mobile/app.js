@@ -3,7 +3,7 @@ const KEY='gp-nutrition-v2-ergonomic-prototype-only';
 const MEALS=[['breakfast','Petit-déjeuner'],['snack-am','Collation matin'],['lunch','Déjeuner'],['snack-pm','Collation après-midi'],['dinner','Dîner']];
 const $=id=>document.getElementById(id);
 const FAMILIES=['Fruits','Légumes','Viandes','Poissons et fruits de mer','Œufs','Féculents et céréales','Produits laitiers','Légumineuses','Oléagineux','Matières grasses','Boissons','Produits sucrés','Autres'];
-const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLocaleLowerCase('fr');
+const norm=s=>String(s||'').normalize('NFD').replace(/\p{M}/gu,'').toLocaleLowerCase('fr');
 const familyOf=item=>item.family||'Autres';
 
 const isoDate=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
