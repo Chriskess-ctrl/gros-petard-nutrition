@@ -144,7 +144,7 @@
       </header>
       <img class="editor-rule" src="assets/editor-rule.webp" alt="" width="650" height="29">
       <div id="editor-fields">
-        <label>Aliment<input name="name" required maxlength="80" placeholder="Ex. banane"></label>
+        <div class="food-autocomplete"><label for="meal-food-name">Aliment</label><input id="meal-food-name" name="name" required maxlength="80" placeholder="Ex. banane" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="meal-food-suggestions"><div id="meal-food-suggestions" class="food-suggestions" role="listbox" aria-label="Aliments de ma bibliothèque" hidden></div></div>
         <div class="spell-field">
           <span class="spell-label" id="food-family-label">Famille d’aliments</span>
           <select name="family" id="food-family" class="spell-native-select" tabindex="-1" aria-hidden="true"></select>
