@@ -127,3 +127,6 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 .food-suggestions button+button{margin-top:5px}
 .food-suggestions button small{font:400 .78em system-ui,sans-serif;color:#f3cde8}
 .food-suggestions button[aria-selected="true"],.food-suggestions button:focus-visible{outline:2px solid #ff9fe6;background:#69245d;box-shadow:0 0 12px #f32fbb8a}
+
+/* Sélection cru/cuit — même langage visuel que les champs néon */
+.meat-state-field{margin:16px 0 18px;color:#ffe6b1}.meat-state-field[hidden]{display:none!important}.meat-state-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:9px 0}.meat-state-buttons button{min-height:52px;border:1.5px solid #e9aa6b;border-radius:14px;background:#371338;color:#ffe6bd;font:inherit;font-weight:700;box-shadow:inset 0 0 12px #9b287344}.meat-state-buttons button[aria-pressed="true"]{border-color:#ffc778;background:#64235e;box-shadow:0 0 12px #f04fc5, inset 0 0 12px #ed5bba99}.meat-state-field small{display:block;color:#dec7da;font-size:.78rem;line-height:1.35}
