@@ -39,15 +39,15 @@ for(const id of ['combine-weight','combine-waist','combine-glutes'])$(id).addEve
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const date=b.dataset.deleteWeight;if(date&&confirm('Supprimer cette pesée ?')){const db=read();delete db.weights[date];write(db);render();}const m=b.dataset.deleteMeasure;if(m&&confirm('Supprimer cette mesure ?')){const db=read();delete db.measurements[m][$('measure-kind').value];write(db);render();}if(b.dataset.page==='suivi'){closeTracking();render();}});
 const DEMO_MARK='gp-demo-2026-11-14';
 const demoDates=()=>Array.from({length:9},(_,i)=>dayOffset(today(),-28+i*3+(i===8?4:0)));
-function demoRefresh(){const db=read(),present=(db.demoTracking?.dates||[]).length>0;$('demo-tracking-add').hidden=present;$('demo-tracking-remove').hidden=!present;$('demo-tracking-status').textContent=present?'Démonstration active · '+db.demoTracking.dates.length+' relevés fictifs':'Aucune donnée fictive active';}
+function demoRefresh(){const db=read(),present=(db.demoTracking?.dates||[]).length>0;$('demo-tracking-add').hidden=present;$('demo-tracking-remove').hidden=!present;$('demo-tracking-status').textContent=present?'Démonstration active · '+db.demoTracking.dates.length+' relevés fictifs · ouvrir Mensurations pour consulter les courbes':'Aucune donnée fictive active';}
 $('demo-tracking-add').addEventListener('click',()=>{
- const db=read();if(db.demoTracking?.dates?.length)return;
+ const db=read();if(db.demoTracking?.dates?.length){openTracking('measure');return;}db.days=db.days||{};
  const dates=demoDates(),weight=[74.5,74.2,74.0,73.7,73.8,73.4,73.1,72.8,72.6],waist=[85,84.5,84,83.8,83.5,83,82.5,82,81.5],hips=[105,104.7,104.3,104,103.7,103.4,103.2,103,102.8],glutes=[108,108.2,108.3,108.5,108.4,108.7,108.9,109,109.2],thigh=[57,56.9,56.8,56.7,56.6,56.5,56.5,56.4,56.3];
  db.weights=db.weights||{};db.measurements=db.measurements||{};
  const originals={weights:{},measurements:{}};
- dates.forEach((d,i)=>{originals.weights[d]=Object.hasOwn(db.weights,d)?db.weights[d]:null;originals.measurements[d]=Object.hasOwn(db.measurements,d)?structuredClone(db.measurements[d]):null;db.weights[d]=weight[i];db.measurements[d]={...(db.measurements[d]||{}),waist:waist[i],hips:hips[i],glutes:glutes[i],thigh:thigh[i],chest:96-i*.1,upperThigh:65-i*.1,arm:29+i*.1};});
- db.demoTracking={marker:DEMO_MARK,dates,originals,inserted:dates.map(d=>({date:d,weight:db.weights[d],measurements:structuredClone(db.measurements[d])}))};
- write(db);render();demoRefresh();
+ dates.forEach((d,i)=>{originals.weights[d]=Object.hasOwn(db.weights,d)?db.weights[d]:null;originals.measurements[d]=Object.hasOwn(db.measurements,d)?JSON.parse(JSON.stringify(db.measurements[d])):null;db.weights[d]=weight[i];db.measurements[d]={...(db.measurements[d]||{}),waist:waist[i],hips:hips[i],glutes:glutes[i],thigh:thigh[i],chest:96-i*.1,upperThigh:65-i*.1,arm:29+i*.1};});
+ db.demoTracking={marker:DEMO_MARK,dates,originals,inserted:dates.map(d=>({date:d,weight:db.weights[d],measurements:JSON.parse(JSON.stringify(db.measurements[d]))}))};
+ write(db);render();demoRefresh();openTracking('measure');
 });
 $('demo-tracking-remove').addEventListener('click',()=>{
  const db=read(),demo=db.demoTracking;if(demo?.marker!==DEMO_MARK)return;
