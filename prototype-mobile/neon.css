@@ -876,3 +876,21 @@ body.interior-page:has(#journal:not([hidden])) #nutrition-app { max-width: var(-
  #suivi .latest-card{padding:14px 12px;}
  #suivi .tracking-actions button{font-size:.76rem;padding:9px 3px;}
 }
+
+/* Samsung : sélecteur famille au premier plan sans allonger la page */
+#menus .gp-family-options{position:fixed!important;right:auto!important;bottom:auto!important;z-index:99999!important;overflow-y:auto!important;overscroll-behavior:contain;max-height:310px;scrollbar-width:thin}
+#menus .gp-family-option{min-height:40px;padding:8px 11px;margin-bottom:3px;font-size:.88rem}
+#menus .library-filters{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:9px!important;margin:0 0 10px!important}
+#menus .library-filters label{font-size:.86rem!important;font-family:system-ui,sans-serif!important}
+#menus .library-filters input,#menus .gp-family-trigger{min-height:46px!important;margin-top:5px!important;padding:9px 10px!important;font-size:.88rem!important}
+#menus .gp-family-picker{margin-top:5px!important}
+#menus .gp-family-trigger{margin-top:0!important}
+#menus .library-help{margin:0 0 12px!important;line-height:1.35!important;max-width:none!important}
+#menus.page{padding:17px 13px 24px!important;min-width:0}
+#menus .library-food{background:linear-gradient(135deg,#381340,#270d34)!important}
+#menus .library-food-head{padding:5px!important}
+#menus .library-food-main{border:0!important;background:transparent!important;box-shadow:none!important;min-height:0!important}
+#menus .library-star,#menus .library-expand{border:0!important;background:transparent!important;box-shadow:none!important}
+body:has(#menus.page:not([hidden])){background:#09040e!important}
+body:has(#menus.page:not([hidden])) main{background:transparent!important}
+@media(max-width:350px){#menus .library-filters{grid-template-columns:1fr!important}}
