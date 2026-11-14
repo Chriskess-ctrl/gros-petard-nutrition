@@ -32,14 +32,28 @@
         el.classList.toggle('selected', active);
       });
     };
+    const positionList = () => {
+      const rect=button.getBoundingClientRect();
+      const viewport=window.visualViewport;
+      const top=viewport?.offsetTop||0;
+      const bottom=top+(viewport?.height||window.innerHeight);
+      const spaceBelow=bottom-rect.bottom-96;
+      const spaceAbove=rect.top-top-12;
+      const upward=spaceBelow<190&&spaceAbove>spaceBelow;
+      const height=Math.max(120,Math.min(310,upward?spaceAbove-8:spaceBelow));
+      list.style.left=Math.max(8,rect.left)+'px';
+      list.style.width=rect.width+'px';
+      list.style.maxHeight=height+'px';
+      list.style.top=(upward?Math.max(top+8,rect.top-height-7):rect.bottom+6)+'px';
+    };
     const close = (focus = false) => {
       list.hidden = true; button.setAttribute('aria-expanded', 'false');
       if (focus) button.focus();
     };
     const open = () => {
-      list.hidden = false; button.setAttribute('aria-expanded', 'true');
+      positionList(); list.hidden = false; button.setAttribute('aria-expanded', 'true');
       const selected = list.querySelector('[aria-selected=true]');
-      if (selected) selected.scrollIntoView({block:'nearest'});
+      if (selected) list.scrollTop=Math.max(0,selected.offsetTop-list.offsetTop-16);
     };
     Array.from(native.options).forEach(option => {
       const item = document.createElement('button');
@@ -79,6 +93,8 @@
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && !list.hidden) close(true);
     });
+    window.addEventListener('resize',()=>{if(!list.hidden)positionList();});
+    window.addEventListener('scroll',()=>{if(!list.hidden)close();},{passive:true});
     native.addEventListener('change', sync);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
