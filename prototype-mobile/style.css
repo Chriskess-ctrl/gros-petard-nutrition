@@ -115,3 +115,5 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 .library-add-dialog button{border:1px solid #e6ae74;border-radius:12px;background:#4a1c4b;color:#ffe4b1;padding:11px 15px;min-height:44px;font:inherit}
 .library-add-dialog .library-add-actions button{flex:1}
 .library-add-dialog .library-add-actions button[type=submit]{border-color:#ffacee;background:#802b79;box-shadow:0 0 13px #f83dba88}
+
+.library-add-dialog #library-add-piece-label[hidden],.library-add-dialog #library-add-density-label[hidden]{display:none}
