@@ -54,7 +54,8 @@ const ANALYSIS_OPTIONS=[
  {id:'f',label:'Lipides',unit:'g',color:'#b3d879',type:'nutrition'}
 ];
 const ANALYSIS_KEY='gp-analysis-preferences-v1';
-let analysisPrefs=(()=>{try{const p=JSON.parse(localStorage.getItem(ANALYSIS_KEY));return {selected:Array.isArray(p?.selected)?p.selected:['weight','waist','glutes'],mode:p?.mode==='overlay'?'overlay':'separate',window:['7','15','30','custom'].includes(p?.window)?p.window:'30'};}catch{return {selected:['weight','waist','glutes'],mode:'separate',window:'30'};}})();
+let analysisSelectedDate=null;
+let analysisPrefs=(()=>{try{const p=JSON.parse(localStorage.getItem(ANALYSIS_KEY));return {selected:Array.isArray(p?.selected)?p.selected:['weight','waist','glutes'],mode:['overview','overlay','separate'].includes(p?.mode)?p.mode:'overview',window:['7','15','30','custom'].includes(p?.window)?p.window:'30'};}catch{return {selected:['weight','waist','glutes'],mode:'overview',window:'30'};}})();
 function saveAnalysisPrefs(){try{localStorage.setItem(ANALYSIS_KEY,JSON.stringify(analysisPrefs));}catch{}}
 function analysisEntries(option,db,range){
  const records=option.type==='weight'?db.weights||{}:option.type==='measure'?Object.fromEntries(Object.entries(db.measurements||{}).map(([d,v])=>[d,v?.[option.id]])):Object.fromEntries(Object.entries(db.days||{}).filter(([,r])=>Array.isArray(r?.items)&&r.items.length).map(([d,r])=>[d,nutritionTotals(r.items)[option.id]]));
@@ -82,13 +83,22 @@ function renderAnalysis(){
  const x=date=>left+(w-left-right)*(new Date(date+'T12:00:00')-new Date(start+'T12:00:00'))/Math.max(1,(days-1)*86400000),y=v=>top+(h-top-bottom)*(high-v)/(high-low);
  const grid=[0,.5,1].map(t=>{const val=low+(high-low)*t;return '<line x1="'+left+'" x2="'+(w-right)+'" y1="'+y(val)+'" y2="'+y(val)+'" stroke="#b5a0b9" stroke-opacity=".3" stroke-dasharray="3 4"/><text x="1" y="'+(y(val)+4)+'" fill="#f2d7b3" font-size="10">'+fmt(val)+'%</text>';}).join('');
  const lines=series.map(o=>'<polyline fill="none" stroke="'+o.color+'" stroke-width="1.8" stroke-linejoin="round" points="'+o.points.map(p=>x(p.date)+','+y(p.value)).join(' ')+'"/>'+o.points.map(p=>'<circle cx="'+x(p.date)+'" cy="'+y(p.value)+'" r="3" fill="'+o.color+'"><title>'+safe(o.label)+' · '+displayDate(p.date)+' · '+fmt(o.entries.find(e=>e.date===p.date).value)+' '+o.unit+' · '+fmt(p.value)+' %</title></circle>').join('')).join('');
- charts='<div class="analysis-plot"><h3>Comparaison des variations (%)</h3>'+(series.length?'<svg viewBox="0 0 330 200" role="img" aria-label="Comparaison des variations relatives">'+grid+lines+'<text x="'+left+'" y="194" font-size="10" fill="#f2d7b3">'+displayDate(start).slice(0,5)+'</text><text x="'+(w-right)+'" y="194" text-anchor="end" font-size="10" fill="#f2d7b3">'+displayDate(end).slice(0,5)+'</text></svg>':'<p>Aucune donnée sur la période.</p>')+'<p class="chart-note">Chaque série commence à 0 % à son premier relevé disponible. Les dates et valeurs réelles sont dans les détails ci-dessous.</p><div class="analysis-legend">'+selected.map(o=>'<span><i style="background:'+o.color+'"></i>'+safe(o.label)+'</span>').join('')+'</div></div>';
+ charts='<div class="analysis-plot"><h3>'+(analysisPrefs.mode==='overview'?'Vue d’ensemble — toutes mes courbes':'Comparaison des variations (%)')+'</h3>'+(series.length?'<svg viewBox="0 0 330 200" role="img" aria-label="Comparaison des variations relatives">'+grid+lines+'<text x="'+left+'" y="194" font-size="10" fill="#f2d7b3">'+displayDate(start).slice(0,5)+'</text><text x="'+(w-right)+'" y="194" text-anchor="end" font-size="10" fill="#f2d7b3">'+displayDate(end).slice(0,5)+'</text></svg>':'<p>Aucune donnée sur la période.</p>')+'<p class="chart-note">Chaque série commence à 0 % à son premier relevé disponible. Sélectionne une date pour lire les valeurs enregistrées.</p><div class="analysis-legend">'+selected.map(o=>'<span><i style="background:'+o.color+'"></i>'+safe(o.label)+'</span>').join('')+'</div></div>';
+ }
+ if(analysisPrefs.mode==='overview'&&selected.length){
+ const dates=[...new Set(selected.flatMap(o=>o.entries.map(e=>e.date)))].sort();
+ const chosen=dates.includes(analysisSelectedDate)?analysisSelectedDate:dates.at(-1);
+ analysisSelectedDate=chosen;
+ const dateButtons=dates.map(d=>'<button type="button" data-analysis-date="'+d+'" aria-pressed="'+(d===chosen)+'">'+displayDate(d).slice(0,5)+'</button>').join('');
+ const details=selected.map(o=>{const e=o.entries.find(e=>e.date===chosen);return '<div class="analysis-stat"><span><i class="analysis-swatch" style="background:'+o.color+'"></i> '+safe(o.label)+'</span><strong>'+(e?fmt(e.value)+' '+o.unit:'—')+'</strong><small>'+(e?'Relevé du '+displayDate(chosen):'Aucun relevé ce jour')+'</small></div>';}).join('');
+ charts+='<div class="analysis-overview-detail"><h3>Valeurs du '+(chosen?displayDate(chosen):'—')+'</h3><div class="chart-day-picker">'+dateButtons+'</div><div class="analysis-stats">'+details+'</div></div>';
  }
  $('analysis-results').innerHTML='<h2 class="analysis-subtitle">Bilan de la période</h2><div class="analysis-stats">'+cards+'</div><h2 class="analysis-subtitle">Mes courbes ('+selected.length+')</h2>'+charts;
  if(analysisPrefs.mode==='separate')selected.forEach(o=>chart('analysis-chart-'+o.id,o.label,o.entries,o.unit,range));
 }
 $('analysis-from').value=dayOffset(today(),-29);$('analysis-to').value=today();$('analysis-window').value=analysisPrefs.window;
 $('analysis-selectors').addEventListener('change',e=>{const id=e.target.dataset.analysisChoice;if(!id)return;analysisPrefs.selected=e.target.checked?[...new Set([...analysisPrefs.selected,id])]:analysisPrefs.selected.filter(v=>v!==id);saveAnalysisPrefs();renderAnalysis();});
+$('analysis-results').addEventListener('click',e=>{const b=e.target.closest('[data-analysis-date]');if(b){analysisSelectedDate=b.dataset.analysisDate;renderAnalysis();}});
 $('analysis-clear').addEventListener('click',()=>{analysisPrefs.selected=[];saveAnalysisPrefs();renderAnalysis();});
 $('analysis-window').addEventListener('change',()=>{analysisPrefs.window=$('analysis-window').value;saveAnalysisPrefs();renderAnalysis();});
 for(const id of ['analysis-from','analysis-to'])$(id).addEventListener('change',renderAnalysis);
