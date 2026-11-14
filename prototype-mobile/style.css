@@ -117,3 +117,13 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 .library-add-dialog .library-add-actions button[type=submit]{border-color:#ffacee;background:#802b79;box-shadow:0 0 13px #f83dba88}
 
 .library-add-dialog #library-add-piece-label[hidden],.library-add-dialog #library-add-density-label[hidden]{display:none}
+
+/* Suggestions d'aliments de la bibliothèque dans les repas */
+.food-autocomplete{position:relative;z-index:8;display:flex;flex-direction:column;gap:6px}
+.food-autocomplete>label{display:block}
+.food-autocomplete>input{width:100%;box-sizing:border-box}
+.food-suggestions:not([hidden]){display:flex;flex-direction:column;position:relative;z-index:20;margin-top:5px;max-height:min(38vh,320px);overflow-y:auto;overscroll-behavior:contain;padding:6px;border:1px solid #f3ae73;border-radius:17px;background:#260c2e;box-shadow:0 0 15px #f03ac18a,0 12px 24px #08010dcc}
+.food-suggestions button{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:12px 14px;margin:0;border:1px solid #d878b588;border-radius:12px;background:#431947;color:#ffe2a8;text-align:left;font:inherit;cursor:pointer}
+.food-suggestions button+button{margin-top:5px}
+.food-suggestions button small{font:400 .78em system-ui,sans-serif;color:#f3cde8}
+.food-suggestions button[aria-selected="true"],.food-suggestions button:focus-visible{outline:2px solid #ff9fe6;background:#69245d;box-shadow:0 0 12px #f32fbb8a}
