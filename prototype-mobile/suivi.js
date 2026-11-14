@@ -1,7 +1,15 @@
 'use strict';
 (()=>{const KEY='gp-nutrition-v2-ergonomic-prototype-only', $=id=>document.getElementById(id), today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')},fmt=(n,d=1)=>Number(n).toLocaleString('fr-FR',{maximumFractionDigits:d}),safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const KINDS=[['waist','Taille'],['hips','Hanches'],['glutes','Fessiers'],['thigh','Cuisse'],['chest','Poitrine'],['upperThigh','Haut de cuisse'],['arm','Bras']];
-const read=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{}}catch{return {}}},write=db=>localStorage.setItem(KEY,JSON.stringify(db));
+const DEMO=new URLSearchParams(location.search).get('demo')==='1';
+const demoDates=Array.from({length:9},(_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-28+i*3.5);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')});
+const demoWeights=[74.5,74.2,74.1,73.8,73.6,73.4,73.2,73.1,72.8];
+const demoWaist=[85,84.7,84.3,84,83.5,83.2,82.8,82.4,82];
+const demoGlutes=[108,108.1,108.3,108.5,108.6,108.8,109,109.1,109.3];
+const demoData={weights:Object.fromEntries(demoDates.map((d,i)=>[d,demoWeights[i]])),measurements:Object.fromEntries(demoDates.map((d,i)=>[d,{waist:demoWaist[i],hips:101-i*.2,glutes:demoGlutes[i],thigh:56+i*.08,chest:97,upperThigh:65,arm:29+i*.04}]))};
+const read=()=>{try{const real=JSON.parse(localStorage.getItem(KEY))||{};return DEMO?{...real,weights:demoData.weights,measurements:demoData.measurements}:real}catch{return DEMO?demoData:{}}},write=db=>{if(DEMO)return;localStorage.setItem(KEY,JSON.stringify(db));};
+if(DEMO){const banner=document.createElement('div');banner.className='tracking-demo-banner';banner.innerHTML='<strong>🧪 Démonstration : données fictives</strong><span>9 relevés de poids et de mensurations sur 30 jours. Tes données réelles ne sont pas modifiées.</span><a href="'+location.pathname+'#suivi">Quitter la démonstration</a>';document.getElementById('tracking-dashboard').prepend(banner);document.querySelectorAll('[data-quick], [data-delete-weight], [data-delete-measure]').forEach(b=>b.disabled=true);}
+
 const dayOffset=(date,n)=>{const d=new Date(date+'T12:00:00');d.setDate(d.getDate()+n);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 const avg=values=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
 const stat=(label,value)=>'<div class="track-stat"><b>'+value+'</b><small>'+label+'</small></div>';
