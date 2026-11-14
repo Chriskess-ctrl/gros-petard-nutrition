@@ -15,7 +15,7 @@ const avg=values=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
 const stat=(label,value)=>'<div class="track-stat"><b>'+value+'</b><small>'+label+'</small></div>';
 const diff=(a,b,unit)=>a==null||b==null?'—':(b-a>0?'+':'')+fmt(b-a)+' '+unit;
 const chartSelections={};
-function chart(target,title,entries,unit,range){
+function chart(target,title,entries,unit,range,color='#5de1c1'){
  const el=$(target),end=range?.end||today(),start=range?.start||dayOffset(end,-29);
  if(!range?.valid||!entries.length){el.innerHTML='<div class="track-chart"><h3>'+safe(title)+'</h3><p class="chart-note">Aucun relevé pour cette période. Les journées sans saisie ne sont pas comptées.</p></div>';return;}
  const days=Math.max(1,Math.round((new Date(end+'T12:00:00')-new Date(start+'T12:00:00'))/86400000)+1);
@@ -26,9 +26,9 @@ function chart(target,title,entries,unit,range){
  const w=330,h=190,left=42,right=14,top=14,bottom=39;
  const x=date=>left+(w-left-right)*(new Date(date+'T12:00:00')-new Date(start+'T12:00:00'))/Math.max(1,(days-1)*86400000);
  const y=value=>top+(h-top-bottom)*(high-value)/(high-low);
- const points=entries.map(e=>'<circle cx="'+x(e.date)+'" cy="'+y(e.value)+'" r="'+(e.date===selected?5.5:4)+'" fill="'+(e.date===selected?'#ffca7c':'#5de1c1')+'" stroke="#371536" stroke-width="1.5"><title>'+displayDate(e.date)+' : '+fmt(e.value)+' '+unit+'</title></circle>').join('');
+ const points=entries.map(e=>'<circle cx="'+x(e.date)+'" cy="'+y(e.value)+'" r="'+(e.date===selected?5.5:4)+'" fill="'+(e.date===selected?'#ffca7c':color)+'" stroke="#371536" stroke-width="1.5"><title>'+displayDate(e.date)+' : '+fmt(e.value)+' '+unit+'</title></circle>').join('');
  // Relier finement les relevés existants, sans créer de valeur pour les dates sans saisie.
- const lines=entries.length>1?'<polyline fill="none" stroke="#5de1c1" stroke-opacity=".85" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" points="'+entries.map(e=>x(e.date)+','+y(e.value)).join(' ')+'"/>':'';
+ const lines=entries.length>1?'<polyline fill="none" stroke="'+color+'" stroke-opacity=".9" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" points="'+entries.map(e=>x(e.date)+','+y(e.value)).join(' ')+'"/>':'';
  const ticks=Array.from(new Set([0,Math.floor((days-1)/2),days-1])).map(i=>{const date=dayOffset(start,i);return '<text x="'+x(date)+'" y="181" text-anchor="middle" font-size="11" fill="#f4d9b1">'+displayDate(date).slice(0,5)+'</text>';}).join('');
  const grid=[0,.5,1].map(t=>{const v=low+(high-low)*t;return '<line x1="'+left+'" y1="'+y(v)+'" x2="'+(w-right)+'" y2="'+y(v)+'" stroke="#ad8caa" stroke-opacity=".3" stroke-dasharray="3 4"/><text x="1" y="'+(y(v)+3)+'" font-size="10" fill="#f4d9b1">'+fmt(v)+'</text>';}).join('');
  const selector=entries.map(e=>'<button type="button" data-chart-target="'+target+'" data-chart-date="'+e.date+'" aria-pressed="'+(e.date===selected)+'">'+displayDate(e.date).slice(0,5)+'</button>').join('');
@@ -46,14 +46,16 @@ const measures=Object.entries(db.measurements||{}).filter(([date,record])=>/^\d{
 const selectedDate=$('day')?.value||today(),record=db.days?.[selectedDate],items=Array.isArray(record?.items)?record.items:[],totals=nutritionTotals(items);$('overview-calories').textContent=fmt(totals.kcal)+' kcal';$('overview-protein').textContent='Protéines '+fmt(totals.p)+' g';$('overview-carbs').textContent='Glucides '+fmt(totals.c)+' g';$('overview-fat').textContent='Lipides '+fmt(totals.f)+' g';$('overview-nutrition-date').textContent='Le '+displayDate(selectedDate)+(record?.complete?' · Journée complète':items.length?' · Journée en cours':' · Aucun aliment saisi');}
 
 const ANALYSIS_OPTIONS=[
- {id:'weight',label:'Poids',unit:'kg',color:'#58d9a6',type:'weight'},
- ...KINDS.map(([id,label],i)=>({id,label,unit:'cm',color:['#f8c078','#8ba9f2','#e67c88','#bb95ef','#e6c18e','#82d4df','#e7a1c5'][i],type:'measure'})),
- {id:'kcal',label:'Calories',unit:'kcal',color:'#f5a65a',type:'nutrition'},
- {id:'p',label:'Protéines',unit:'g',color:'#e5a6d5',type:'nutrition'},
- {id:'c',label:'Glucides',unit:'g',color:'#7fc9f3',type:'nutrition'},
- {id:'f',label:'Lipides',unit:'g',color:'#b3d879',type:'nutrition'}
+ {id:'weight',label:'Poids',unit:'kg',color:'#42CDA8',type:'weight'},
+ ...KINDS.map(([id,label],i)=>({id,label,unit:'cm',color:['#F2B96B','#83A9F4','#F07F9B','#B993F3','#E8C28D','#69CDD5','#E7A2CA'][i],type:'measure'})),
+ {id:'kcal',label:'Calories',unit:'kcal',color:'#FF9652',type:'nutrition'},
+ {id:'p',label:'Protéines',unit:'g',color:'#E66ED1',type:'nutrition'},
+ {id:'c',label:'Glucides',unit:'g',color:'#54B7EE',type:'nutrition'},
+ {id:'f',label:'Lipides',unit:'g',color:'#A7CE69',type:'nutrition'}
 ];
 const ANALYSIS_KEY='gp-analysis-preferences-v1';
+let analysisFocus=null;
+const analysisHidden=new Set();
 let analysisSelectedDate=null;
 let analysisPrefs=(()=>{try{const p=JSON.parse(localStorage.getItem(ANALYSIS_KEY));return {selected:Array.isArray(p?.selected)?p.selected:['weight','waist','glutes'],mode:['overview','overlay','separate','summary'].includes(p?.mode)?p.mode:'overview',window:['7','15','30','custom'].includes(p?.window)?p.window:'30'};}catch{return {selected:['weight','waist','glutes'],mode:'overview',window:'30'};}})();
 function saveAnalysisPrefs(){try{localStorage.setItem(ANALYSIS_KEY,JSON.stringify(analysisPrefs));}catch{}}
@@ -78,14 +80,14 @@ function renderAnalysis(){
  }else if(analysisPrefs.mode==='separate'){
  charts=selected.map(o=>'<div class="analysis-plot"><h3><span class="analysis-swatch" style="background:'+o.color+'"></span>'+safe(o.label)+'</h3><div id="analysis-chart-'+o.id+'"></div></div>').join('');
  }else{
- const available=selected.filter(o=>o.entries.length);
+ const available=selected.filter(o=>o.entries.length&&!analysisHidden.has(o.id));
  const days=Math.max(1,Math.round((new Date(end+'T12:00:00')-new Date(start+'T12:00:00'))/86400000)+1),w=330,h=200,left=42,right=15,top=20,bottom=35;
  const series=available.map(o=>({...o,points:o.entries.map(e=>({date:e.date,value:o.entries[0].value?100*(e.value/o.entries[0].value-1):0}))}));
  const values=series.flatMap(o=>o.points.map(p=>p.value)),lo=Math.min(0,...values),hi=Math.max(0,...values),span=Math.max(hi-lo,1),low=lo-span*.15,high=hi+span*.15;
  const x=date=>left+(w-left-right)*(new Date(date+'T12:00:00')-new Date(start+'T12:00:00'))/Math.max(1,(days-1)*86400000),y=v=>top+(h-top-bottom)*(high-v)/(high-low);
  const grid=[0,.5,1].map(t=>{const val=low+(high-low)*t;return '<line x1="'+left+'" x2="'+(w-right)+'" y1="'+y(val)+'" y2="'+y(val)+'" stroke="#b5a0b9" stroke-opacity=".3" stroke-dasharray="3 4"/><text x="1" y="'+(y(val)+4)+'" fill="#f2d7b3" font-size="10">'+fmt(val)+'%</text>';}).join('');
- const lines=series.map(o=>'<polyline fill="none" stroke="'+o.color+'" stroke-width="1.8" stroke-linejoin="round" points="'+o.points.map(p=>x(p.date)+','+y(p.value)).join(' ')+'"/>'+o.points.map(p=>'<circle cx="'+x(p.date)+'" cy="'+y(p.value)+'" r="3" fill="'+o.color+'"><title>'+safe(o.label)+' · '+displayDate(p.date)+' · '+fmt(o.entries.find(e=>e.date===p.date).value)+' '+o.unit+' · '+fmt(p.value)+' %</title></circle>').join('')).join('');
- charts='<div class="analysis-plot"><h3>'+(analysisPrefs.mode==='overview'?'Vue d’ensemble — toutes mes courbes':'Comparaison des variations (%)')+'</h3>'+(series.length?'<svg viewBox="0 0 330 200" role="img" aria-label="Comparaison des variations relatives">'+grid+lines+'<text x="'+left+'" y="194" font-size="10" fill="#f2d7b3">'+displayDate(start).slice(0,5)+'</text><text x="'+(w-right)+'" y="194" text-anchor="end" font-size="10" fill="#f2d7b3">'+displayDate(end).slice(0,5)+'</text></svg>':'<p>Aucune donnée sur la période.</p>')+'<p class="chart-note">Chaque série commence à 0 % à son premier relevé disponible. Sélectionne une date pour lire les valeurs enregistrées.</p><div class="analysis-legend">'+selected.map(o=>'<span><i style="background:'+o.color+'"></i>'+safe(o.label)+'</span>').join('')+'</div></div>';
+ const lines=series.map(o=>'<polyline fill="none" stroke="'+o.color+'" stroke-width="'+(analysisFocus===o.id?'3.2':'1.8')+'" stroke-opacity="'+(analysisFocus&&analysisFocus!==o.id?'.22':'1')+'" stroke-linejoin="round" points="'+o.points.map(p=>x(p.date)+','+y(p.value)).join(' ')+'"/>'+o.points.map(p=>'<circle cx="'+x(p.date)+'" cy="'+y(p.value)+'" r="3" fill="'+o.color+'" opacity="'+(analysisFocus&&analysisFocus!==o.id?'.22':'1')+'"><title>'+safe(o.label)+' · '+displayDate(p.date)+' · '+fmt(o.entries.find(e=>e.date===p.date).value)+' '+o.unit+' · '+fmt(p.value)+' %</title></circle>').join('')).join('');
+ charts='<div class="analysis-plot"><h3>'+(analysisPrefs.mode==='overview'?'Vue d’ensemble — toutes mes courbes':'Comparaison des variations (%)')+'</h3>'+(series.length?'<svg viewBox="0 0 330 200" role="img" aria-label="Comparaison des variations relatives">'+grid+lines+'<text x="'+left+'" y="194" font-size="10" fill="#f2d7b3">'+displayDate(start).slice(0,5)+'</text><text x="'+(w-right)+'" y="194" text-anchor="end" font-size="10" fill="#f2d7b3">'+displayDate(end).slice(0,5)+'</text></svg>':'<p>Aucune donnée sur la période.</p>')+'<p class="chart-note">Chaque série commence à 0 % à son premier relevé disponible. Sélectionne une date pour lire les valeurs enregistrées.</p><div class="analysis-legend">'+selected.map(o=>'<button type="button" class="analysis-legend-item" data-analysis-focus="'+o.id+'" aria-pressed="'+(analysisFocus===o.id)+'" aria-label="Mettre en évidence '+safe(o.label)+'"><i style="background:'+o.color+'"></i>'+safe(o.label)+'</button>').join('')+'</div></div>';
  }
  if(analysisPrefs.mode==='overview'&&selected.length){
  const dates=[...new Set(selected.flatMap(o=>o.entries.map(e=>e.date)))].sort();
@@ -96,12 +98,13 @@ function renderAnalysis(){
  charts+='<details class="analysis-overview-detail"><summary>Valeurs du '+(chosen?displayDate(chosen):'—')+' · voir le détail</summary><div class="analysis-date-picker">'+dateButtons+'</div><div class="analysis-stats">'+details+'</div></details>';
  }
  $('analysis-results').innerHTML=analysisPrefs.mode==='summary'?'<h2 class="analysis-subtitle">Bilan de la période</h2><div class="analysis-stats">'+cards+'</div>':charts;
- if(analysisPrefs.mode==='separate')selected.forEach(o=>chart('analysis-chart-'+o.id,o.label,o.entries,o.unit,range));
+ if(analysisPrefs.mode==='separate')selected.forEach(o=>chart('analysis-chart-'+o.id,o.label,o.entries,o.unit,range,o.color));
 }
 $('analysis-filter-toggle').addEventListener('click',()=>{const panel=$('analysis-filter-panel');panel.hidden=!panel.hidden;$('analysis-filter-toggle').setAttribute('aria-expanded',String(!panel.hidden));});
 $('analysis-filter-done').addEventListener('click',()=>{$('analysis-filter-panel').hidden=true;$('analysis-filter-toggle').setAttribute('aria-expanded','false');});
 $('analysis-from').value=dayOffset(today(),-29);$('analysis-to').value=today();$('analysis-window').value=analysisPrefs.window;
 $('analysis-selectors').addEventListener('change',e=>{const id=e.target.dataset.analysisChoice;if(!id)return;analysisPrefs.selected=e.target.checked?[...new Set([...analysisPrefs.selected,id])]:analysisPrefs.selected.filter(v=>v!==id);saveAnalysisPrefs();renderAnalysis();});
+$('analysis-results').addEventListener('click',e=>{const b=e.target.closest('[data-analysis-focus]');if(!b)return;const id=b.dataset.analysisFocus;if(e.altKey){if(analysisHidden.has(id))analysisHidden.delete(id);else analysisHidden.add(id);}else{analysisFocus=analysisFocus===id?null:id;}renderAnalysis();});
 $('analysis-results').addEventListener('change',e=>{if(e.target.id==='analysis-date-select'){analysisSelectedDate=e.target.value;renderAnalysis();const detail=$('analysis-results').querySelector('.analysis-overview-detail');if(detail)detail.open=true;}});
 $('analysis-results').addEventListener('click',e=>{const b=e.target.closest('[data-analysis-date]');if(b){analysisSelectedDate=b.dataset.analysisDate;renderAnalysis();}});
 $('analysis-clear').addEventListener('click',()=>{analysisPrefs.selected=[];saveAnalysisPrefs();renderAnalysis();});
