@@ -22,7 +22,13 @@ db.goals={kcal:1700,p:80,c:225,f:53,...(db.goals||{})};
 db.library=Array.isArray(db.library)?db.library:[];
 db.deletedLibraryNames=Array.isArray(db.deletedLibraryNames)?db.deletedLibraryNames:[];
 // Aliments de démarrage : ne jamais écraser les valeurs personnelles ni recréer un aliment supprimé.
-const STARTER_FOODS=[
+const MEAT_STARTERS=[
+ {name:'Blanc de poulet',raw:{kcal:110,p:23,c:0,f:1.8},cooked:{kcal:165,p:31,c:0,f:3.6}},
+ {name:'Blanc de dinde',raw:{kcal:110,p:24,c:0,f:1.3},cooked:{kcal:150,p:30,c:0,f:2.5}},
+ {name:'Bœuf haché 5 % MG',raw:{kcal:137,p:21,c:0,f:5},cooked:{kcal:170,p:27,c:0,f:6.5}},
+ {name:'Filet de porc',raw:{kcal:120,p:22,c:0,f:3},cooked:{kcal:160,p:29,c:0,f:4.5}}
+].map(x=>({...x,family:'Viandes',unit:'g',...x.raw,variants:{raw:x.raw,cooked:x.cooked}}));
+const STARTER_FOODS=[...MEAT_STARTERS,
   {name:'Tomates cerises crues',family:'Légumes',kcal:21,p:0.8,c:3.5,f:0.3,unit:'g'},
   {name:'Champignons de Paris frais',family:'Légumes',kcal:22,p:2.6,c:1.8,f:0.4,unit:'g'},
   {name:'Laitue iceberg crue',family:'Légumes',kcal:14,p:0.9,c:1.8,f:0.1,unit:'g'},
@@ -45,9 +51,28 @@ const data=()=>db.days[day]||{items:[],complete:false};
 const items=()=>data().items||[];
 const totals=arr=>arr.reduce((a,i)=>{const q=i.grams/100;for(const k of ['kcal','p','c','f'])a[k]+=i[k]*q;return a},{kcal:0,p:0,c:0,f:0});
 const fmt=n=>Math.round(n).toLocaleString('fr-FR');
+const meatFood=name=>db.library.find(food=>norm(food.name)===norm(name)&&food.variants?.raw&&food.variants?.cooked);
+let selectedMeatState='raw';
+function setMeatState(state){
+ const form=$('food-form').elements,food=meatFood(form.namedItem('name').value);
+ selectedMeatState=state==='cooked'?'cooked':'raw';
+ $('meat-state-field').hidden=!food;
+ document.querySelectorAll('[data-meat-state]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.meatState===selectedMeatState)));
+ if(food){const values=food.variants[selectedMeatState];for(const k of ['kcal','p','c','f'])form.namedItem(k).value=values[k];}
+}
+function applyFoodToMeal(food,state='raw'){
+ const f=$('food-form').elements;
+ for(const k of ['name','kcal','p','c','f'])f.namedItem(k).value=food[k]??'';
+ f.namedItem('family').value=familyOf(food);
+ f.namedItem('unit').value=food.unit||'g';
+ f.namedItem('pieceWeight').value=food.pieceWeight??'';
+ f.namedItem('density').value=food.density??1;
+ setMeatState(state);
+ syncUnit();syncSpellPickerLabels();
+}
 const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function update(fn){const record=structuredClone(data());fn(record);db.days[day]=record;save();render();window.dispatchEvent(new Event('gp:nutrition-updated'));}
-function renderLibrary(){const query=norm($('food-search').value.trim()),family=$('family-filter').value;const list=db.library.filter(f=>(!family||familyOf(f)===family)&&norm(f.name).includes(query)).sort((a,b)=>a.name.localeCompare(b.name,'fr',{sensitivity:'base'}));$('library-list').innerHTML=list.length?list.map(f=>'<article class="library-food"><div><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g</small></div><div class="library-food-actions"><button data-library="'+db.library.indexOf(f)+'">Utiliser</button><button type="button" data-library-delete="'+db.library.indexOf(f)+'" aria-label="Supprimer '+safe(f.name)+'">Supprimer</button></div></article>').join(''):'<p class="library-empty">Aucun aliment trouvé. Utilise « + Ajouter un aliment » pour commencer ta bibliothèque.</p>';}
+function renderLibrary(){const query=norm($('food-search').value.trim()),family=$('family-filter').value;const list=db.library.filter(f=>(!family||familyOf(f)===family)&&norm(f.name).includes(query)).sort((a,b)=>a.name.localeCompare(b.name,'fr',{sensitivity:'base'}));$('library-list').innerHTML=list.length?list.map(f=>'<article class="library-food"><div><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g'+(f.variants?' cru · '+fmt(f.variants.cooked.kcal)+' kcal / 100 g cuit':'')+'</small></div><div class="library-food-actions"><button data-library="'+db.library.indexOf(f)+'">Utiliser</button><button type="button" data-library-delete="'+db.library.indexOf(f)+'" aria-label="Supprimer '+safe(f.name)+'">Supprimer</button></div></article>').join(''):'<p class="library-empty">Aucun aliment trouvé. Utilise « + Ajouter un aliment » pour commencer ta bibliothèque.</p>';}
 function render() {
   const goal = db.goals;
   const ring = (id, value, target) => {
@@ -176,7 +201,7 @@ let foodSuggestionActive=-1;
 function closeFoodSuggestions(){foodSuggestions.hidden=true;foodNameInput.setAttribute('aria-expanded','false');foodNameInput.removeAttribute('aria-activedescendant');foodSuggestionActive=-1;}
 function renderFoodSuggestions(){const query=norm(foodNameInput.value.trim());foodSuggestionMatches=query?db.library.filter(food=>norm(food.name).split(/[^\p{L}\p{N}]+/u).some(word=>word.startsWith(query))).sort((a,b)=>{const aa=norm(a.name).startsWith(query)?0:1,bb=norm(b.name).startsWith(query)?0:1;return aa-bb||a.name.localeCompare(b.name,'fr',{sensitivity:'base'});}).slice(0,8):[];foodSuggestionActive=-1;if(!foodSuggestionMatches.length){closeFoodSuggestions();return;}foodSuggestions.innerHTML=foodSuggestionMatches.map((food,i)=>'<button type="button" role="option" id="food-suggestion-'+i+'" aria-selected="false" data-suggestion="'+i+'"><strong>'+safe(food.name)+'</strong><small>'+safe(familyOf(food))+' · '+fmt(food.kcal)+' kcal / 100 g</small></button>').join('');foodSuggestions.hidden=false;foodNameInput.setAttribute('aria-expanded','true');}
 function highlightFoodSuggestion(i){foodSuggestionActive=i;foodSuggestions.querySelectorAll('[data-suggestion]').forEach((b,j)=>b.setAttribute('aria-selected',String(i===j)));if(i>=0){foodNameInput.setAttribute('aria-activedescendant','food-suggestion-'+i);foodSuggestions.children[i]?.scrollIntoView({block:'nearest'});}else foodNameInput.removeAttribute('aria-activedescendant');}
-function chooseFoodSuggestion(i){const food=foodSuggestionMatches[i];if(!food)return;const f=$('food-form').elements;for(const k of ['name','kcal','p','c','f'])f.namedItem(k).value=food[k]??'';f.namedItem('family').value=familyOf(food);f.namedItem('unit').value=food.unit||'g';f.namedItem('pieceWeight').value=food.pieceWeight??'';f.namedItem('density').value=food.density??1;syncUnit();syncSpellPickerLabels();closeFoodSuggestions();f.namedItem('quantity').focus();}
+function chooseFoodSuggestion(i){const food=foodSuggestionMatches[i];if(!food)return;applyFoodToMeal(food);closeFoodSuggestions();$('food-form').elements.namedItem('quantity').focus();}
 foodNameInput.addEventListener('input',renderFoodSuggestions);
 foodNameInput.addEventListener('focus',renderFoodSuggestions);
 foodNameInput.addEventListener('keydown',e=>{if(e.key==='Escape'){closeFoodSuggestions();return;}if(foodSuggestions.hidden)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();highlightFoodSuggestion((foodSuggestionActive+(e.key==='ArrowDown'?1:-1)+foodSuggestionMatches.length)%foodSuggestionMatches.length);}else if(e.key==='Enter'&&foodSuggestionActive>=0){e.preventDefault();chooseFoodSuggestion(foodSuggestionActive);}});
@@ -191,6 +216,8 @@ function openEditor(key,id=null){
   document.querySelector('.editor-heading-art').src='assets/journal-'+key+'.webp';
   const form=$('food-form');
   form.reset();
+  selectedMeatState='raw';
+  $('meat-state-field').hidden=true;
   closeFoodSuggestions();
   if(item){
     const f=form.elements;
@@ -200,6 +227,8 @@ function openEditor(key,id=null){
     f.namedItem('pieceWeight').value=item.pieceWeight||'';
     f.namedItem('density').value=item.density||1;
     f.namedItem('family').value=familyOf(item);
+    setMeatState(item.meatState||'raw');
+    if(item.meatState&&meatFood(item.name)){for(const k of ['kcal','p','c','f'])f.namedItem(k).value=item[k];}
   }
   syncUnit();
   syncSpellPickerLabels();
@@ -226,8 +255,7 @@ document.addEventListener('click',e=>{
       page('journal');
       openEditor(journalExpanded);
       const f=$('food-form').elements;
-      for(const k of ['name','kcal','p','c','f'])f.namedItem(k).value=food[k];
-      f.namedItem('family').value=familyOf(food);
+      applyFoodToMeal(food);
       f.namedItem('unit').value=food.unit||'g';
       f.namedItem('quantity').value=food.unit==='piece'?1:food.unit==='cl'?10:100;
       f.namedItem('pieceWeight').value=food.pieceWeight||'';
@@ -243,10 +271,12 @@ document.addEventListener('click',e=>{
   if(b.dataset.edit){const item=items().find(i=>i.id===b.dataset.edit);if(item)openEditor(item.meal,item.id);return;}
   if(b.dataset.delete){if(confirm('Supprimer cet aliment ?'))update(r=>{r.items=r.items.filter(i=>i.id!==b.dataset.delete)});}
 });
-$('food-form').addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget.elements;const field=k=>f.namedItem(k).value;const unit=field('unit'),quantity=Number(field('quantity')),pieceWeight=Number(field('pieceWeight')),density=Number(field('density'));const grams=unit==='g'?quantity:unit==='piece'?quantity*pieceWeight:quantity*(unit==='cl'?10:1)*density;const v={id:editId||crypto.randomUUID(),meal:mealKey,name:field('name').trim(),family:field('family'),unit,quantity,pieceWeight:unit==='piece'?pieceWeight:null,density:unit==='ml'||unit==='cl'?density:null,grams,kcal:Number(field('kcal')),p:Number(field('p')),c:Number(field('c')),f:Number(field('f'))};if(!v.name||!Number.isFinite(v.grams)||v.grams<=0||['kcal','p','c','f'].some(k=>!Number.isFinite(v[k])||v[k]<0))return;update(r=>{r.items=r.items||[];const index=r.items.findIndex(i=>i.id===editId);if(index>=0)r.items[index]=v;else r.items.push(v)});const existing=db.library.findIndex(f=>norm(f.name)===norm(v.name));const food={name:v.name,family:v.family,kcal:v.kcal,p:v.p,c:v.c,f:v.f,unit:v.unit,pieceWeight:v.pieceWeight,density:v.density};if(existing>=0)db.library[existing]=food;else db.library.push(food);db.deletedLibraryNames=db.deletedLibraryNames.filter(n=>n!==norm(food.name));save();closeFoodSuggestions();$('editor').close();journalExpanded=mealKey;page('journal');render();});
+$('food-form').addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget.elements;const field=k=>f.namedItem(k).value;const unit=field('unit'),quantity=Number(field('quantity')),pieceWeight=Number(field('pieceWeight')),density=Number(field('density'));const grams=unit==='g'?quantity:unit==='piece'?quantity*pieceWeight:quantity*(unit==='cl'?10:1)*density;const v={id:editId||crypto.randomUUID(),meal:mealKey,name:field('name').trim(),family:field('family'),unit,quantity,pieceWeight:unit==='piece'?pieceWeight:null,density:unit==='ml'||unit==='cl'?density:null,grams,meatState:meatFood(field('name').trim())?selectedMeatState:null,kcal:Number(field('kcal')),p:Number(field('p')),c:Number(field('c')),f:Number(field('f'))};if(!v.name||!Number.isFinite(v.grams)||v.grams<=0||['kcal','p','c','f'].some(k=>!Number.isFinite(v[k])||v[k]<0))return;update(r=>{r.items=r.items||[];const index=r.items.findIndex(i=>i.id===editId);if(index>=0)r.items[index]=v;else r.items.push(v)});const existing=db.library.findIndex(f=>norm(f.name)===norm(v.name));const oldFood=existing>=0?db.library[existing]:null;const food={name:v.name,family:v.family,kcal:v.kcal,p:v.p,c:v.c,f:v.f,unit:v.unit,pieceWeight:v.pieceWeight,density:v.density};if(oldFood?.variants){food.variants=structuredClone(oldFood.variants);food.variants[v.meatState||'raw']={kcal:v.kcal,p:v.p,c:v.c,f:v.f};Object.assign(food,food.variants.raw);}if(existing>=0)db.library[existing]=food;else db.library.push(food);db.deletedLibraryNames=db.deletedLibraryNames.filter(n=>n!==norm(food.name));save();closeFoodSuggestions();$('editor').close();journalExpanded=mealKey;page('journal');render();});
 $('cancel').onclick=()=>$('editor').close();
 $('editor-close').onclick=()=>$('editor').close();
 $('food-unit').addEventListener('change',syncUnit);
+document.querySelectorAll('[data-meat-state]').forEach(b=>b.addEventListener('click',()=>setMeatState(b.dataset.meatState)));
+foodNameInput.addEventListener('input',()=>{if(!meatFood(foodNameInput.value))$('meat-state-field').hidden=true;});
 for(const k of ['quantity','pieceWeight','density'])$('food-form').elements.namedItem(k).addEventListener('input',syncUnit);
 function syncLibraryAddUnit(){const unit=$('library-add-unit').value;const piece=$('library-add-piece-label'),density=$('library-add-density-label');piece.hidden=unit!=='piece';density.hidden=unit!=='ml'&&unit!=='cl';piece.querySelector('input').required=unit==='piece';density.querySelector('input').required=unit==='ml'||unit==='cl';}
 $('library-add-unit').addEventListener('change',syncLibraryAddUnit);
