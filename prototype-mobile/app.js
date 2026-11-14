@@ -21,6 +21,14 @@ if (stored.days && typeof stored.days === 'object') db = stored;
 db.goals={kcal:1700,p:80,c:225,f:53,...(db.goals||{})};
 db.library=Array.isArray(db.library)?db.library:[];
 db.deletedLibraryNames=Array.isArray(db.deletedLibraryNames)?db.deletedLibraryNames:[];
+// Aliments de démarrage : ne jamais écraser les valeurs personnelles ni recréer un aliment supprimé.
+const STARTER_FOODS=[
+  {name:'Tomates cerises crues',family:'Légumes',kcal:21,p:0.8,c:3.5,f:0.3,unit:'g'},
+  {name:'Champignons de Paris frais',family:'Légumes',kcal:22,p:2.6,c:1.8,f:0.4,unit:'g'},
+  {name:'Laitue iceberg crue',family:'Légumes',kcal:14,p:0.9,c:1.8,f:0.1,unit:'g'},
+  {name:'Mélange mâche et roquette',family:'Légumes',kcal:22,p:2.2,c:2.0,f:0.5,unit:'g'}
+];
+for(const food of STARTER_FOODS){if(!db.deletedLibraryNames.includes(norm(food.name))&&!db.library.some(existing=>norm(existing.name)===norm(food.name)))db.library.push({...food});}
 // Reconstitue les aliments saisis dans les anciennes versions du prototype.
 for(const record of Object.values(db.days)){for(const item of (record.items||[])){if(!db.deletedLibraryNames.includes(norm(item.name))&&!db.library.some(f=>norm(f.name)===norm(item.name)))db.library.push({name:item.name,family:familyOf(item),kcal:item.kcal,p:item.p,c:item.c,f:item.f});}}
 $('food-family').innerHTML=FAMILIES.map(f=>'<option>'+f+'</option>').join('');
