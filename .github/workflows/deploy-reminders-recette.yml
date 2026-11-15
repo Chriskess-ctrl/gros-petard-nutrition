@@ -1,0 +1,70 @@
+name: Déployer les rappels — recette Cloudflare
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gros-petard-rappels-recette
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: rappels-recette
+    defaults:
+      run:
+        working-directory: cloudflare/reminders
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      RAPPELS_KV_NAMESPACE_ID: ${{ secrets.RAPPELS_KV_NAMESPACE_ID }}
+      VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+      VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+      VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+      REMINDERS_RELAY_TOKEN: ${{ secrets.REMINDERS_RELAY_TOKEN }}
+      PAIRING_CODE_SHA256: ${{ secrets.PAIRING_CODE_SHA256 }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/samsung-push-reminders-2026-11-15
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloudflare/reminders/package-lock.json
+      - name: Vérifier les paramètres requis
+        shell: bash
+        run: |
+          set -euo pipefail
+          for key in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID RAPPELS_KV_NAMESPACE_ID VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY VAPID_SUBJECT REMINDERS_RELAY_TOKEN PAIRING_CODE_SHA256; do
+            if [[ -z "${!key:-}" ]]; then
+              echo "::error::Secret GitHub manquant : $key"
+              exit 1
+            fi
+          done
+          [[ "$RAPPELS_KV_NAMESPACE_ID" =~ ^[a-fA-F0-9]{32}$ ]] || { echo "::error::Identifiant KV invalide"; exit 1; }
+          [[ "$PAIRING_CODE_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo "::error::Empreinte du code d'activation invalide"; exit 1; }
+          [[ "$REMINDERS_RELAY_TOKEN" =~ ^[A-Za-z0-9_-]{43}$ ]] || { echo "::error::Secret relais invalide"; exit 1; }
+          [[ "$VAPID_PUBLIC_KEY" =~ ^[A-Za-z0-9_-]{87}$ ]] || { echo "::error::Clé publique VAPID invalide"; exit 1; }
+          [[ "$VAPID_PRIVATE_KEY" =~ ^[A-Za-z0-9_-]{43}$ ]] || { echo "::error::Clé privée VAPID invalide"; exit 1; }
+          [[ "$VAPID_SUBJECT" == mailto:* || "$VAPID_SUBJECT" == https://* ]] || { echo "::error::Contact VAPID invalide"; exit 1; }
+      - run: npm ci
+      - run: npm test
+      - name: Préparer la configuration de recette isolée
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const base = fs.readFileSync('wrangler.toml','utf8');
+          fs.writeFileSync('wrangler.recette.local.toml', base.replace('00000000000000000000000000000000', process.env.RAPPELS_KV_NAMESPACE_ID), {mode:0o600});
+          const keys = ['VAPID_PUBLIC_KEY','VAPID_PRIVATE_KEY','VAPID_SUBJECT','REMINDERS_RELAY_TOKEN','PAIRING_CODE_SHA256'];
+          fs.writeFileSync('.secrets.recette.json', JSON.stringify(Object.fromEntries(keys.map(k=>[k,process.env[k]]))), {mode:0o600});
+          NODE
+      - name: Déployer le Worker de recette et le déclencheur minute
+        run: npx wrangler deploy --config wrangler.recette.local.toml --secrets-file .secrets.recette.json
+      - name: Nettoyer les fichiers temporaires
+        if: always()
+        run: rm -f wrangler.recette.local.toml .secrets.recette.json
