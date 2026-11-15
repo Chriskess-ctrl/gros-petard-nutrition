@@ -95,7 +95,7 @@
       + '<option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option>'
       + '<option value="monthly">Chaque mois</option></select></label>'
       + '<label class="reminder-day">Jour<select data-field="day"></select></label>'
-      + '<label class="reminder-time-label">Heure (HH:MM)<input type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="16:45" required></label></div>;'
+      + '<label class="reminder-time-label">Heure (HH:MM)<input type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="16:45" required></label></div>';
     card.querySelector('.reminder-title').textContent = label;
     const enabled = card.querySelector('input[type=checkbox]');
     const options = card.querySelector('.reminder-options');
