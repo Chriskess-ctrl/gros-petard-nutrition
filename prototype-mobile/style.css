@@ -260,3 +260,9 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 .reminder-enrollment{display:grid;gap:8px}
 .reminder-enrollment input{width:100%;min-width:0;min-height:44px;font-size:16px}
 @media(max-width:380px){.reminder-options{grid-template-columns:1fr}}
+
+/* Champ d'activation : afficher/masquer sans modifier le code enregistré. */
+.reminder-code-field{position:relative;display:flex;align-items:center;min-width:0}
+.reminder-code-field #reminder-code{padding-right:60px}
+.reminder-code-field .reminder-code-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:48px;min-width:48px;min-height:44px;padding:0;border:0;background:transparent;color:#173c34;font-size:22px;cursor:pointer}
+.reminder-code-field .reminder-code-toggle:focus-visible{outline:2px solid #ad7846;outline-offset:-3px;border-radius:8px}
