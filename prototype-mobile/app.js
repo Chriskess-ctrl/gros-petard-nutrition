@@ -55,7 +55,7 @@ const data=()=>db.days[day]||{items:[],complete:false};
 const items=()=>data().items||[];
 const totals=arr=>arr.reduce((a,i)=>{const q=i.grams/100;for(const k of ['kcal','p','c','f'])a[k]+=i[k]*q;return a},{kcal:0,p:0,c:0,f:0});
 const fmt=n=>Math.round(n).toLocaleString('fr-FR');
-const meatFood=name=>db.library.find(food=>norm(food.name)===norm(name)&&food.variants?.raw&&food.variants?.cooked);
+const meatFood=name=>db.library.find(food=>norm(food.name)===norm(name)&&food.variants&&(food.variants.raw||food.variants.cooked));
 let selectedMeatState='raw';
 function mealLiveTotals(){
  const f=$('food-form').elements,unit=f.namedItem('unit').value,q=Number(f.namedItem('quantity').value);
@@ -77,7 +77,7 @@ function setMeatState(state){
  selectedMeatState=state==='cooked'?'cooked':'raw';
  $('meat-state-field').hidden=!food;
  document.querySelectorAll('[data-meat-state]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.meatState===selectedMeatState)));
- if(food){const values=food.variants[selectedMeatState];for(const k of ['kcal','p','c','f'])form.namedItem(k).value=values[k];}mealLiveTotals();
+ if(food){const values=food.variants[selectedMeatState];for(const k of ['kcal','p','c','f'])form.namedItem(k).value=values?values[k]:'';}mealLiveTotals();
 }
 function applyFoodToMeal(food,state='raw'){
  const f=$('food-form').elements;
@@ -86,7 +86,7 @@ function applyFoodToMeal(food,state='raw'){
  f.namedItem('unit').value=food.unit||'g';
  f.namedItem('pieceWeight').value=food.pieceWeight??'';
  f.namedItem('density').value=food.density??1;
- setMeatState(state);
+ setMeatState(food.variants?.[state]?state:food.variants?.raw?'raw':food.variants?.cooked?'cooked':state);
  syncUnit();syncSpellPickerLabels();setMealNutritionExpanded(false);mealLiveTotals();
 }
 const safe=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -108,7 +108,7 @@ function renderLibrary(){
  const visible=(libraryShowAll||query||family)?list:list.slice(0,5);
  $('library-list').innerHTML=visible.length?visible.map(f=>{
   const index=db.library.indexOf(f),expanded=libraryOpen===norm(f.name),favorite=favs.includes(norm(f.name));
-  return '<article class="library-food library-food-compact"><div class="library-food-head"><button type="button" class="library-food-main" data-library-expand="'+index+'" aria-expanded="'+expanded+'"><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g'+(f.variants?' cru · '+fmt(f.variants.cooked.kcal)+' cuit':'')+'</small></button><button type="button" class="library-star" data-library-favorite="'+index+'" aria-label="'+(favorite?'Retirer des favoris':'Ajouter aux favoris')+'" aria-pressed="'+favorite+'">'+(favorite?'★':'☆')+'</button><button type="button" class="library-expand" data-library-expand="'+index+'" aria-label="Détails de '+safe(f.name)+'">'+(expanded?'⌃':'⌄')+'</button></div>'+
+  return '<article class="library-food library-food-compact"><div class="library-food-head"><button type="button" class="library-food-main" data-library-expand="'+index+'" aria-expanded="'+expanded+'"><strong>'+safe(f.name)+'</strong><small>'+safe(familyOf(f))+' · '+fmt(f.kcal)+' kcal / 100 g'+(f.variants?.raw?' cru':'')+(f.variants?.cooked?' · '+fmt(f.variants.cooked.kcal)+' cuit':'')+'</small></button><button type="button" class="library-star" data-library-favorite="'+index+'" aria-label="'+(favorite?'Retirer des favoris':'Ajouter aux favoris')+'" aria-pressed="'+favorite+'">'+(favorite?'★':'☆')+'</button><button type="button" class="library-expand" data-library-expand="'+index+'" aria-label="Détails de '+safe(f.name)+'">'+(expanded?'⌃':'⌄')+'</button></div>'+
   (expanded?'<div class="library-food-details"><p>Pour 100 g : '+fmt(f.kcal)+' kcal · P '+fmt(f.p)+' g · G '+fmt(f.c)+' g · L '+fmt(f.f)+' g</p><div class="library-food-actions"><button type="button" data-library="'+index+'">Utiliser</button><button type="button" data-library-edit="'+index+'">Modifier</button><button type="button" data-library-delete="'+index+'">Supprimer</button></div></div>':'')+'</article>';
  }).join(''):'<p class="library-empty">Aucun aliment trouvé. Tu peux en ajouter un à ta bibliothèque.</p>';
  $('library-more').hidden=!!query||!!family||list.length<=5;
@@ -287,7 +287,7 @@ document.addEventListener('click',e=>{
   if(b.hasAttribute('data-library-filter')){libraryFilter=b.dataset.libraryFilter;libraryShowAll=false;libraryOpen=null;renderLibrary();return;}
   if(b.hasAttribute('data-library-expand')){const food=db.library[Number(b.dataset.libraryExpand)];if(food){libraryOpen=libraryOpen===norm(food.name)?null:norm(food.name);renderLibrary();}return;}
   if(b.hasAttribute('data-library-favorite')){const food=db.library[Number(b.dataset.libraryFavorite)];if(!food)return;const key=norm(food.name);db.libraryFavorites=db.libraryFavorites.includes(key)?db.libraryFavorites.filter(n=>n!==key):[...db.libraryFavorites,key];save();renderLibrary();return;}
-  if(b.hasAttribute('data-library-edit')){const food=db.library[Number(b.dataset.libraryEdit)];if(!food)return;libraryEditIndex=Number(b.dataset.libraryEdit);const form=$('library-add-form');form.reset();for(const key of ['name','family','unit','pieceWeight','density','kcal','p','c','f']){const el=form.elements.namedItem(key);if(el)el.value=food[key]??(key==='density'?1:'');}syncLibraryAddUnit();$('library-add-title').textContent='Modifier mon aliment';$('library-add-dialog').showModal();return;}
+  if(b.hasAttribute('data-library-edit')){const food=db.library[Number(b.dataset.libraryEdit)];if(!food)return;libraryEditIndex=Number(b.dataset.libraryEdit);const form=$('library-add-form');form.reset();for(const key of ['name','family','unit','pieceWeight','density','kcal','p','c','f']){const el=form.elements.namedItem(key);if(el)el.value=food[key]??(key==='density'?1:'');}syncLibraryAddUnit();prepareLibraryState(food);$('library-add-title').textContent='Modifier mon aliment';$('library-add-dialog').showModal();return;}
   if(b.hasAttribute('data-library-delete')){
     const index=Number(b.dataset.libraryDelete),food=db.library[index];
     if(!food)return;
@@ -320,16 +320,22 @@ document.addEventListener('click',e=>{
   if(b.dataset.edit){const item=items().find(i=>i.id===b.dataset.edit);if(item)openEditor(item.meal,item.id);return;}
   if(b.dataset.delete){if(confirm('Supprimer cet aliment ?'))update(r=>{r.items=r.items.filter(i=>i.id!==b.dataset.delete)});}
 });
-$('food-form').addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget.elements;const field=k=>f.namedItem(k).value;const unit=field('unit'),quantity=Number(field('quantity')),pieceWeight=Number(field('pieceWeight')),density=Number(field('density'));const grams=unit==='g'?quantity:unit==='piece'?quantity*pieceWeight:quantity*(unit==='cl'?10:1)*density;const v={id:editId||crypto.randomUUID(),meal:mealKey,name:field('name').trim(),family:field('family'),unit,quantity,pieceWeight:unit==='piece'?pieceWeight:null,density:unit==='ml'||unit==='cl'?density:null,grams,meatState:meatFood(field('name').trim())?selectedMeatState:null,kcal:Number(field('kcal')),p:Number(field('p')),c:Number(field('c')),f:Number(field('f'))};if(!v.name||!Number.isFinite(v.grams)||v.grams<=0||['kcal','p','c','f'].some(k=>!Number.isFinite(v[k])||v[k]<0))return;update(r=>{r.items=r.items||[];const index=r.items.findIndex(i=>i.id===editId);if(index>=0)r.items[index]=v;else r.items.push(v)});const existing=db.library.findIndex(f=>norm(f.name)===norm(v.name));const oldFood=existing>=0?db.library[existing]:null;const food={name:v.name,family:v.family,kcal:v.kcal,p:v.p,c:v.c,f:v.f,unit:v.unit,pieceWeight:v.pieceWeight,density:v.density};if(oldFood?.variants){food.variants=structuredClone(oldFood.variants);food.variants[v.meatState||'raw']={kcal:v.kcal,p:v.p,c:v.c,f:v.f};Object.assign(food,food.variants.raw);}if(existing<0)db.library.push(food);db.deletedLibraryNames=db.deletedLibraryNames.filter(n=>n!==norm(food.name));save();closeFoodSuggestions();$('editor').close();journalExpanded=mealKey;page('journal');render();});
+$('food-form').addEventListener('submit',e=>{e.preventDefault();const f=e.currentTarget.elements;const field=k=>f.namedItem(k).value;const unit=field('unit'),quantity=Number(field('quantity')),pieceWeight=Number(field('pieceWeight')),density=Number(field('density'));const grams=unit==='g'?quantity:unit==='piece'?quantity*pieceWeight:quantity*(unit==='cl'?10:1)*density;const v={id:editId||crypto.randomUUID(),meal:mealKey,name:field('name').trim(),family:field('family'),unit,quantity,pieceWeight:unit==='piece'?pieceWeight:null,density:unit==='ml'||unit==='cl'?density:null,grams,meatState:meatFood(field('name').trim())?selectedMeatState:null,kcal:Number(field('kcal')),p:Number(field('p')),c:Number(field('c')),f:Number(field('f'))};if(!v.name||!Number.isFinite(v.grams)||v.grams<=0||['kcal','p','c','f'].some(k=>!Number.isFinite(v[k])||v[k]<0))return;update(r=>{r.items=r.items||[];const index=r.items.findIndex(i=>i.id===editId);if(index>=0)r.items[index]=v;else r.items.push(v)});const existing=db.library.findIndex(f=>norm(f.name)===norm(v.name));const oldFood=existing>=0?db.library[existing]:null;const food={name:v.name,family:v.family,kcal:v.kcal,p:v.p,c:v.c,f:v.f,unit:v.unit,pieceWeight:v.pieceWeight,density:v.density};if(oldFood?.variants){food.variants=structuredClone(oldFood.variants);if(v.meatState)food.variants[v.meatState]={kcal:v.kcal,p:v.p,c:v.c,f:v.f};Object.assign(food,food.variants.raw||food.variants.cooked||{});}if(existing<0)db.library.push(food);db.deletedLibraryNames=db.deletedLibraryNames.filter(n=>n!==norm(food.name));save();closeFoodSuggestions();$('editor').close();journalExpanded=mealKey;page('journal');render();});
 $('cancel').onclick=()=>$('editor').close();
 $('editor-close').onclick=()=>$('editor').close();
 $('food-unit').addEventListener('change',syncUnit);
 document.querySelectorAll('[data-meat-state]').forEach(b=>b.addEventListener('click',()=>setMeatState(b.dataset.meatState)));
 foodNameInput.addEventListener('input',()=>{if(!meatFood(foodNameInput.value))$('meat-state-field').hidden=true;});
 for(const k of ['quantity','pieceWeight','density'])$('food-form').elements.namedItem(k).addEventListener('input',syncUnit);
+let libraryStateDraft={};
+const libraryKeys=['kcal','p','c','f'];
+function captureLibraryState(){const state=$('library-add-state').value;libraryStateDraft[state]=Object.fromEntries(libraryKeys.map(k=>[k,$('library-add-form').elements.namedItem(k).value]));}
+function showLibraryState(state){const values=libraryStateDraft[state]||{};for(const k of libraryKeys)$('library-add-form').elements.namedItem(k).value=values[k]??'';$('library-state-help').textContent=state==='single'?'Valeurs pour 100 g, sans distinction cru/cuit.':'Valeurs pour 100 g '+(state==='raw'?'crus':'cuits')+'. Pour enregistrer l’autre état, change le sélecteur.';}
+$('library-add-state').addEventListener('change',e=>{const next=e.target.value,old=e.target.dataset.previous||'raw';libraryStateDraft[old]=Object.fromEntries(libraryKeys.map(k=>[k,$('library-add-form').elements.namedItem(k).value]));e.target.dataset.previous=next;showLibraryState(next);});
+function prepareLibraryState(food){const select=$('library-add-state');libraryStateDraft=food?.variants?structuredClone(food.variants):food?{single:Object.fromEntries(libraryKeys.map(k=>[k,food[k]??'']))}:{};const state=food?.variants?(food.variants.raw?'raw':'cooked'):food?'single':'raw';select.value=state;select.dataset.previous=state;showLibraryState(state);}
 function syncLibraryAddUnit(){const unit=$('library-add-unit').value;const piece=$('library-add-piece-label'),density=$('library-add-density-label');piece.hidden=unit!=='piece';density.hidden=unit!=='ml'&&unit!=='cl';piece.querySelector('input').required=unit==='piece';density.querySelector('input').required=unit==='ml'||unit==='cl';}
 $('library-add-unit').addEventListener('change',syncLibraryAddUnit);
-$('library-add-open').addEventListener('click',()=>{libraryEditIndex=null;$('library-add-title').textContent='Ajouter à ma bibliothèque';$('library-add-form').reset();syncLibraryAddUnit();$('library-add-dialog').showModal();});
+$('library-add-open').addEventListener('click',()=>{libraryEditIndex=null;$('library-add-title').textContent='Ajouter à ma bibliothèque';$('library-add-form').reset();syncLibraryAddUnit();prepareLibraryState(null);$('library-add-dialog').showModal();});
 $('library-more').addEventListener('click',()=>{libraryShowAll=!libraryShowAll;renderLibrary();});
 $('library-add-close').addEventListener('click',()=>$('library-add-dialog').close());
 $('library-add-cancel').addEventListener('click',()=>$('library-add-dialog').close());
@@ -350,7 +356,16 @@ $('library-add-form').addEventListener('submit',e=>{
     if(!Number.isFinite(value)||value<0){alert('Vérifie les valeurs nutritionnelles.');return;}
     food[key]=value;
   }
-  if(libraryEditIndex!==null){const old=db.library[libraryEditIndex];if(old?.variants){food.variants=structuredClone(old.variants);food.variants.raw={kcal:food.kcal,p:food.p,c:food.c,f:food.f};}db.library[libraryEditIndex]=food;db.libraryFavorites=db.libraryFavorites.map(n=>n===norm(old.name)?norm(name):n);}else db.library.push(food);
+  captureLibraryState();
+  const state=form.elements.namedItem('foodState').value;
+  if(state!=='single'){
+    const variants={};
+    for(const s of ['raw','cooked']){const values=libraryStateDraft[s];if(!values||libraryKeys.some(k=>values[k]===''||values[k]===undefined))continue;const parsed=Object.fromEntries(libraryKeys.map(k=>[k,Number(values[k])]));if(Object.values(parsed).every(n=>Number.isFinite(n)&&n>=0))variants[s]=parsed;}
+    if(!variants[state]){alert('Renseigne les valeurs pour l’état sélectionné.');return;}
+    food.variants=variants;
+    Object.assign(food,variants.raw||variants.cooked);
+  }
+  if(libraryEditIndex!==null){const old=db.library[libraryEditIndex];db.library[libraryEditIndex]=food;db.libraryFavorites=db.libraryFavorites.map(n=>n===norm(old.name)?norm(name):n);}else db.library.push(food);
   libraryEditIndex=null;
   db.deletedLibraryNames=db.deletedLibraryNames.filter(n=>n!==norm(name));
   save();renderLibrary();$('library-add-dialog').close();
