@@ -10,7 +10,7 @@ const ART = [
 ];
 const ASSETS = [
   ENTRY, './style.css', './neon.css', './editor.css', './app.js', './suivi.js',
-  './manifest.webmanifest', '../icon-192.png', '../icon-512.png',
+  './manifest.webmanifest', './reminders.js', '../icon-192.png', '../icon-512.png',
   ...ART.map(name => './assets/' + name + '.webp'),
 ];
 
@@ -51,4 +51,22 @@ self.addEventListener('fetch', event => {
       return Response.error();
     }
   })());
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const destination = new URL('./index.html', self.registration.scope).href;
+  event.waitUntil((async () => {
+    const clientsList = await clients.matchAll({type:'window',includeUncontrolled:true});
+    const existing = clientsList.find(client => client.url.startsWith(self.registration.scope));
+    if(existing){await existing.focus();return;}
+    await clients.openWindow(destination);
+  })());
+});
+self.addEventListener('push', event => {
+  if(!event.data)return;
+  let payload;try{payload=event.data.json()}catch{return;}
+  const title=typeof payload.title==='string'?payload.title.slice(0,100):'GROS PÉTARD — Nutrition';
+  const body=typeof payload.body==='string'?payload.body.slice(0,240):'Ton rappel est arrivé.';
+  event.waitUntil(self.registration.showNotification(title,{body,icon:'../icon-192.png',tag:'gp-reminder'}));
 });
