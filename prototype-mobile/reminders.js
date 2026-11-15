@@ -7,6 +7,7 @@
   const scheduleKey = 'gp-nutrition-reminder-schedules-v2';
   const deviceKey = 'gp-nutrition-push-device-v1';
   const tokenPattern = /^[A-Za-z0-9_-]{43}$/;
+  const pairingCodePattern = /^[A-Za-z0-9_-]{32,43}$/;
   const timePattern = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
   const choices = {
     weight: ['Pesée', 'weekly', 1, '07:30'],
@@ -230,7 +231,7 @@
   enable.addEventListener('click', () => run(async device => {
     if (device?.phase === 'active' || device?.phase === 'revoke') return;
     const code = codeInput.value.trim();
-    if (!tokenPattern.test(code)) {
+    if (!pairingCodePattern.test(code)) {
       codeInput.focus();
       throw Error('Renseigne ton code d’activation.');
     }
