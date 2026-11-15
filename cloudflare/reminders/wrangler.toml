@@ -10,8 +10,7 @@ crons = ["* * * * *"]
 
 [[kv_namespaces]]
 binding = "RAPPELS_KV"
-# Reserved for the local emulator. Set the separate recipe namespace in a local config before deploying.
-id = "00000000000000000000000000000000"
+id = "6323f418868540ac8f47aa018118fda4"
 
 [[durable_objects.bindings]]
 name = "REMINDER_REGISTRY"

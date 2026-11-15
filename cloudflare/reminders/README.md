@@ -13,13 +13,13 @@ npm run check
 npm run dev
 ```
 
-`GET /status` vérifie la présence du binding `RAPPELS_KV`. Le fichier Wrangler fourni utilise un identifiant réservé à l’émulateur. La commande `check` compile le Worker sans le publier.
+`GET /status` vérifie la présence du binding `RAPPELS_KV`. Wrangler émule le stockage KV pendant `npm run dev`. La commande `check` vérifie la compilation en mode simulation.
 
 ## Configuration de la recette
 
-1. Créer un espace KV de recette dédié et copier `wrangler.toml` vers `wrangler.recette.local.toml`. Remplacer l’identifiant composé de zéros par celui du KV de recette. Le fichier cible le Worker `gros-petard-rappels-recette`.
+1. Dans **Workers & Pages**, créer le Worker `gros-petard-rappels-recette` via GitHub. Sélectionner le dépôt `Chriskess-ctrl/gros-petard-nutrition`, la branche `feat/samsung-push-reminders-2026-11-15` et le dossier `cloudflare/reminders`. Utiliser `npm test` comme commande de build et `npx wrangler deploy` comme commande de déploiement. Le fichier `wrangler.toml` associe déjà le binding `RAPPELS_KV` à l’espace de stockage de recette.
 2. Préparer des valeurs distinctes pour la recette dans le gestionnaire de secrets. Pour le relais et le code d’activation, générer chacun 32 octets aléatoires encodés en Base64URL sans remplissage. Générer la paire VAPID avec `npm exec -- web-push generate-vapid-keys --json`.
-3. Configurer les secrets du Worker. Une fois l’accès établi, `npm exec -- wrangler deploy --config wrangler.recette.local.toml --secrets-file .dev.vars.recette` publie la recette avec son déclencheur minute.
+3. Renseigner les secrets du Worker de recette dans **Settings → Variables and Secrets**. Pour un déploiement avec Wrangler, `npm exec -- wrangler deploy --secrets-file .dev.vars.recette` publie la recette avec ses secrets et son déclencheur minute.
 4. Dans Vercel, renseigner `REMINDERS_WORKER_URL` avec l’URL HTTPS du Worker de recette et `REMINDERS_RELAY_TOKEN` avec la même valeur que sur Cloudflare. Cibler l’environnement **Preview** et la branche `feat/samsung-push-reminders-2026-11-15`, puis créer un nouvel aperçu de cette branche.
 5. Ouvrir l’aperçu dans Chrome sur le Samsung. Dans **Plus → Mes rappels**, saisir le code d’activation, autoriser les notifications, envoyer un test, puis vérifier un rappel planifié avec l’application fermée. Tester aussi **Désactiver sur cet appareil**.
 
