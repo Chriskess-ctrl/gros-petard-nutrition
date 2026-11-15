@@ -47,6 +47,7 @@ export function dueReminders({ schedules, timeZone, activeFrom }, scheduledTime,
 
     for (const [kind, rule] of enabled) {
       if (lastSent[kind] === current.date) continue;
+      if (rule.frequency === 'once' && rule.date !== current.date) continue;
       if (rule.frequency === 'weekly' && rule.day !== current.weekday) continue;
       if (rule.frequency === 'monthly' && current.day !== Math.min(rule.day, current.lastDay)) continue;
       const [hour, minute] = rule.time.split(':').map(Number);
