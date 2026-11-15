@@ -1,5 +1,5 @@
 name: Déployer les rappels — recette Cloudflare
-# Redéploiement de recette après rotation du code d'activation (2026-11-15).
+# Redéploiement de recette après correction de la validation du code d'activation (2026-11-15).
 
 on:
   workflow_dispatch:
