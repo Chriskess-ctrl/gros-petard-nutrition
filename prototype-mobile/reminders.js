@@ -27,6 +27,14 @@
   const disable = root.querySelector('#reminder-disable');
   const test = root.querySelector('#reminder-test-notification');
   const codeInput = root.querySelector('#reminder-code');
+  const codeToggle = root.querySelector('#reminder-code-toggle');
+  codeToggle?.addEventListener('click', () => {
+    const visible = codeInput.type === 'password';
+    codeInput.type = visible ? 'text' : 'password';
+    codeToggle.setAttribute('aria-pressed', String(visible));
+    codeToggle.setAttribute('aria-label', visible ? 'Masquer le code' : 'Afficher le code');
+    codeToggle.title = visible ? 'Masquer le code' : 'Afficher le code';
+  });
   const feedback = root.querySelector('#reminder-device-feedback');
   const scheduleFeedback = root.querySelector('#reminder-status');
   const bindings = new Map();
