@@ -90,18 +90,18 @@
     const card = document.createElement('section');
     card.className = 'reminder-card';
     card.dataset.reminder = kind;
-    card.innerHTML = '<label class="reminder-head"><span></span><input type="checkbox"></label>'
+    card.innerHTML = '<label class="reminder-head"><span class="reminder-title"></span><input type="checkbox" aria-label="Activer ce rappel"></label>'
       + '<div class="reminder-options"><label>Fréquence<select data-field="frequency">'
       + '<option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option>'
       + '<option value="monthly">Chaque mois</option></select></label>'
       + '<label class="reminder-day">Jour<select data-field="day"></select></label>'
-      + '<label>Heure<input type="time" required></label></div>';
-    card.querySelector('span').textContent = label;
+      + '<label class="reminder-time-label">Heure (HH:MM)<input type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="16:45" required></label></div>;'
+    card.querySelector('.reminder-title').textContent = label;
     const enabled = card.querySelector('input[type=checkbox]');
     const options = card.querySelector('.reminder-options');
     const frequency = card.querySelector('[data-field=frequency]');
     const day = card.querySelector('[data-field=day]');
-    const time = card.querySelector('input[type=time]');
+    const time = card.querySelector('.reminder-time-label input');
     enabled.checked = rule.enabled;
     options.hidden = !rule.enabled;
     frequency.value = rule.frequency;
@@ -109,6 +109,10 @@
     day.parentElement.hidden = rule.frequency === 'daily';
     fillDays(day, rule.frequency, rule.day);
     enabled.addEventListener('change', () => { options.hidden = !enabled.checked; });
+    time.addEventListener('blur', () => {
+      const match = /^(\d{1,2})[:hH](\d{1,2})$/.exec(time.value.trim());
+      if (match) time.value = match[1].padStart(2, '0') + ':' + match[2].padStart(2, '0');
+    });
     frequency.addEventListener('change', () => {
       day.parentElement.hidden = frequency.value === 'daily';
       fillDays(day, frequency.value, day.value);
@@ -279,7 +283,7 @@
       if (device?.phase !== 'active') return 'Horaires enregistrés sur cet appareil.';
       try {
         await synchronize(device, schedules);
-        return 'Horaires enregistrés et synchronisés.';
+        return '✓ Rappels enregistrés et synchronisés sur ce Samsung.';
       } catch (error) {
         return 'Horaires enregistrés sur cet appareil. ' + error.message;
       }
