@@ -10,7 +10,7 @@
   const key='gp-nutrition-reminder-schedules-v1';
   let saved={}; try {saved=JSON.parse(localStorage.getItem(key))||{}}catch{}
   const config=Object.fromEntries(Object.entries(defaults).map(([k,v])=>[k,{...v,...(saved[k]||{})}]));
-  root.innerHTML='<h1>🔔 Mes rappels</h1><p class="plus-note">Choisis tes horaires. Les rappels sont enregistrés sur cet appareil. Les notifications en arrière-plan seront disponibles après activation du service Push.</p><div id="reminder-cards"></div><button type="button" id="reminder-save-schedules" class="primary">Enregistrer les rappels</button><button type="button" id="reminder-test-notification">Tester une notification</button><p id="reminder-status" role="status" aria-live="polite" class="plus-feedback"></p>';
+  root.innerHTML='<div hidden><input type="checkbox" id="remind-weight"><input type="checkbox" id="remind-measure"><input type="checkbox" id="remind-food"><button type="button" id="save-reminders">Sauvegarde historique</button><p id="reminders-feedback"></p></div><h1>🔔 Mes rappels</h1><p class="plus-note">Choisis tes horaires. Les rappels sont enregistrés sur cet appareil. Les notifications en arrière-plan seront disponibles après activation du service Push.</p><div id="reminder-cards"></div><button type="button" id="reminder-save-schedules" class="primary">Enregistrer les rappels</button><button type="button" id="reminder-test-notification">Tester une notification</button><p id="reminder-status" role="status" aria-live="polite" class="plus-feedback"></p>';
   const labels={weight:['⚖️','Pesée'],measure:['📏','Mensurations'],food:['🍽️','Repas']};
   const days=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const cards=document.getElementById('reminder-cards');
