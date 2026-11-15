@@ -40,3 +40,7 @@ Cloudflare appelle le Worker chaque minute en UTC. Le Worker calcule l’heure l
 Le binding KV conserve les abonnements et horaires. Le Durable Object SQLite coordonne les modifications, les désactivations et les envois concurrents. Le relais Vercel authentifie ses appels au Worker. Un jeton distinct est nécessaire pour modifier ou désactiver un appareil. Le Worker accepte les abonnements Chrome utilisant le service Push de Google.
 
 La mise en service de `gros-petard-rappels` et de l’application publique requiert la validation de la recette sur le Samsung.
+
+## Déploiement de recette Vercel
+
+Le projet Vercel isolé `gros-petard-rappels-recette-web` reçoit les déploiements Preview de la branche `feat/samsung-push-reminders-2026-11-15`. Les variables `REMINDERS_WORKER_URL` et `REMINDERS_RELAY_TOKEN` sont limitées à cette branche et à Preview. Aucun déploiement de cette branche ne doit remplacer l'application publique.
