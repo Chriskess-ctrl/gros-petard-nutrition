@@ -244,3 +244,13 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 #menus .library-more{display:block;width:100%;padding:11px;margin:8px 0 12px;border:1px solid #b88b75;border-radius:13px;background:#263f38;color:#f4d9b6}
 #menus .library-more[hidden]{display:none}
 @media(max-width:365px){#menus .library-filters{grid-template-columns:1fr}#menus .library-food-actions button{min-width:65px}}
+
+/* Samsung compact reminders */
+.reminder-card{border:1px solid #a58b65;border-radius:16px;padding:14px;margin:12px 0;background:rgba(15,37,37,.48)}
+.reminder-head{display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700;font-size:1.05rem;min-height:44px}
+.reminder-head input{width:22px;height:22px}
+.reminder-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.reminder-options label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:.9rem}
+.reminder-options input,.reminder-options select{width:100%;min-width:0;min-height:44px;font-size:16px}
+#reminder-save-schedules,#reminder-test-notification{min-height:44px;margin:6px 6px 6px 0}
+@media(max-width:380px){.reminder-options{grid-template-columns:1fr}}
