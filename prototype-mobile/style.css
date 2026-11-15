@@ -280,3 +280,10 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 #reminder-save-schedules{display:block;width:100%;max-width:100%;white-space:normal;overflow-wrap:break-word;margin:12px 0 6px}
 #reminder-status{min-height:1.4em;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:380px){.reminder-options{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}.reminder-card{padding:9px}.reminder-options label{font-size:.78rem}}
+
+.reminder-options .reminder-date{grid-column:1/-1}.reminder-options .reminder-date input{width:100%;color-scheme:light}
+.reminder-time-pair{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:end;min-width:0}
+.reminder-time-pair>span{font-size:1.4rem;font-weight:700;padding-bottom:9px}
+.reminder-time-pair input{text-align:center;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}
+.reminder-time-pair input::-webkit-inner-spin-button,.reminder-time-pair input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.reminder-options [hidden]{display:none!important}
