@@ -266,3 +266,17 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 .reminder-code-field #reminder-code{padding-right:60px}
 .reminder-code-field .reminder-code-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:48px;min-width:48px;min-height:44px;padding:0;border:0;background:transparent;color:#173c34;font-size:22px;cursor:pointer}
 .reminder-code-field .reminder-code-toggle:focus-visible{outline:2px solid #ad7846;outline-offset:-3px;border-radius:8px}
+
+/* Rappels Samsung : affichage compact et lisible, sans débordement horizontal */
+[data-push-reminders],#reminder-form,#reminder-cards{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.reminder-card{padding:10px 12px;margin:8px 0;border-radius:13px}
+.reminder-head{min-height:36px;margin:0;display:flex;align-items:center;gap:10px;font-size:1rem;line-height:1.35}
+.reminder-title{flex:1;min-width:0;white-space:normal;overflow-wrap:break-word}
+.reminder-head input[type=checkbox]{flex:0 0 22px;margin:0}
+.reminder-options{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}
+.reminder-options label{min-width:0;max-width:100%;font-size:.84rem;line-height:1.35;overflow-wrap:break-word}
+.reminder-options input,.reminder-options select{box-sizing:border-box;max-width:100%;min-width:0;min-height:42px;padding:8px 7px;font-size:16px}
+.reminder-time-label input{text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+#reminder-save-schedules{display:block;width:100%;max-width:100%;white-space:normal;overflow-wrap:break-word;margin:12px 0 6px}
+#reminder-status{min-height:1.4em;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:380px){.reminder-options{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}.reminder-card{padding:9px}.reminder-options label{font-size:.78rem}}
