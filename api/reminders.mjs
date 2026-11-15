@@ -40,7 +40,7 @@ export async function relay(request, env = process.env, transport = fetch) {
   const origin = request.headers.get('origin');
   const site = request.headers.get('sec-fetch-site');
   if ((origin && origin !== url.origin) || (site && !['same-origin', 'none'].includes(site))) {
-    return fail(403, 'forbidden');
+    return fail(403, 'browser_origin_rejected');
   }
   const upstream = workerOrigin(env);
   const relayToken = env.REMINDERS_RELAY_TOKEN;
@@ -63,6 +63,9 @@ export async function relay(request, env = process.env, transport = fetch) {
     const response = await transport(upstream + '/v1/' + action, {
       method: request.method, headers: forwarded, body, redirect: 'error', signal: AbortSignal.timeout(12000),
     });
+    if (action === 'config' && response.status === 403) {
+      return fail(403, 'cloudflare_relay_token_rejected');
+    }
     return new Response(response.body, {
       status: response.status,
       headers: { ...headers, 'content-type': 'application/json; charset=utf-8' },
