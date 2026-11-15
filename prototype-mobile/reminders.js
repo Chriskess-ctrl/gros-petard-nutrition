@@ -146,6 +146,8 @@
     not_subscribed: 'Réactive les notifications sur cet appareil.',
     test_rate_limited: 'Attends une minute avant de refaire un test.',
     push_unavailable: 'Le service Push n’a pas accepté le test. Réessaie dans une minute.',
+    temporarily_unavailable: 'Le relais Vercel ne parvient pas à joindre Cloudflare (erreur 502).',
+    forbidden: 'La connexion entre Vercel et Cloudflare est refusée (erreur 403).',
   };
 
   async function api(action, token, body) {
@@ -159,7 +161,7 @@
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
       if (result.error === 'not_subscribed' && token) storeDevice({ token, phase: 'expired' });
-      throw Error(apiErrors[result.error] || 'Le service de rappels est momentanément inaccessible.');
+      throw Error(apiErrors[result.error] || ('Le service de rappels a répondu avec une erreur ' + response.status + ' (' + (result.error || 'inconnue') + ').'));
     }
     return result;
   }
