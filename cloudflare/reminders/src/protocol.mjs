@@ -54,11 +54,20 @@ export function validatePreferences({ schedules, timeZone }) {
 
   const validated = kinds.map(kind => {
     const entry = Object.hasOwn(schedules, kind) && schedules[kind];
-    if (!entry || typeof entry.enabled !== 'boolean' || !['daily', 'weekly', 'monthly'].includes(entry.frequency)
+    if (!entry || typeof entry.enabled !== 'boolean' || !['once', 'daily', 'weekly', 'monthly'].includes(entry.frequency)
         || typeof entry.time !== 'string' || !/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(entry.time)) {
       throw new RequestError(400, 'invalid_schedules');
     }
     const { enabled, frequency, day, time } = entry;
+    const date = entry.date;
+    if (frequency === 'once') {
+      if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)
+          || !Number.isFinite(Date.parse(date + 'T00:00:00Z'))
+          || new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date) {
+        throw new RequestError(400, 'invalid_schedules');
+      }
+      return [kind, { enabled, frequency, day: 0, time, date }];
+    }
     const min = frequency === 'monthly' ? 1 : 0;
     const max = frequency === 'monthly' ? 31 : 6;
     if (frequency !== 'daily' && (!Number.isInteger(day) || day < min || day > max)) {
