@@ -2,6 +2,11 @@ name: Déployer les rappels — recette Cloudflare
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feat/samsung-push-reminders-2026-11-15
+    paths:
+      - .github/workflows/deploy-reminders-recette.yml
 
 permissions:
   contents: read
