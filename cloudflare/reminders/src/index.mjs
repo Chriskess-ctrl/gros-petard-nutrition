@@ -78,7 +78,8 @@ export class ReminderRegistry extends DurableObject {
     }
     if (path === '/v1/subscribe') {
       const data = await payload(request);
-      if (!isToken(data.code) || !matches(digest(data.code), this.env.PAIRING_CODE_SHA256)) {
+      if (typeof data.code !== 'string' || !/^[A-Za-z0-9_-]{32,43}$/.test(data.code)
+          || !matches(digest(data.code), this.env.PAIRING_CODE_SHA256)) {
         return json({ error: 'invalid_pairing_code' }, 403);
       }
       return this.save(id, state, data);
