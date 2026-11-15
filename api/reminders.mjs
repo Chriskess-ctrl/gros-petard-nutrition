@@ -39,7 +39,9 @@ export async function relay(request, env = process.env, transport = fetch) {
   if (request.method !== actions.get(action)) return fail(405, 'method_not_allowed');
   const origin = request.headers.get('origin');
   const site = request.headers.get('sec-fetch-site');
-  if ((origin && origin !== url.origin) || (site && !['same-origin', 'none'].includes(site))) {
+  // A top-level navigation can carry Sec-Fetch-Site: cross-site without
+  // being a cross-origin API request. Only reject unsafe cross-origin calls.
+  if ((origin && origin !== url.origin) || (request.method !== 'GET' && site && !['same-origin', 'none'].includes(site))) {
     return fail(403, 'browser_origin_rejected');
   }
   const upstream = workerOrigin(env);
