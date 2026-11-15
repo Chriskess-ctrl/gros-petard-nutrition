@@ -125,7 +125,34 @@
 </div></div>
 <div id="plus-detail" hidden><button type="button" id="plus-back" class="plus-back">‹ Retour à Plus</button>
 <section data-plus-panel="goals" hidden><h1>🎯 Mes objectifs</h1><div class="settings-card plus-settings"><h2>Objectifs quotidiens</h2><div class="formgrid"><label>Calories<input id="goal-kcal" type="number" min="1" max="10000" inputmode="numeric"></label><label>Protéines (g)<input id="goal-p" type="number" min="1" max="1000" inputmode="numeric"></label><label>Glucides (g)<input id="goal-c" type="number" min="1" max="1000" inputmode="numeric"></label><label>Lipides (g)<input id="goal-f" type="number" min="1" max="1000" inputmode="numeric"></label></div><button id="save-goals" class="primary">Enregistrer mes objectifs</button><p id="goals-feedback" role="status" class="plus-feedback"></p></div></section>
-<section data-plus-panel="reminders" hidden><h1>📅 Mes rappels</h1><p class="plus-note">Prépare tes préférences ici. Les notifications automatiques sur Samsung ne sont pas encore activées dans ce prototype.</p><div class="plus-option"><label><input type="checkbox" id="remind-weight"> Pesée</label><label><input type="checkbox" id="remind-measure"> Mensurations</label><label><input type="checkbox" id="remind-food"> Repas</label></div><button type="button" id="save-reminders" class="primary">Enregistrer mes préférences</button><p id="reminders-feedback" role="status" class="plus-feedback"></p></section>
+<section data-plus-panel="reminders" hidden>
+  <div hidden>
+    <input type="checkbox" id="remind-weight">
+    <input type="checkbox" id="remind-measure">
+    <input type="checkbox" id="remind-food">
+    <button type="button" id="save-reminders">Enregistrer mes préférences</button>
+    <p id="reminders-feedback"></p>
+  </div>
+  <div data-push-reminders>
+    <h1>🔔 Mes rappels</h1>
+    <div class="reminder-device">
+      <p id="reminder-device-status" class="plus-note">Notifications désactivées sur cet appareil.</p>
+      <div id="reminder-enrollment" class="reminder-enrollment" hidden>
+        <label for="reminder-code">Code d’activation</label>
+        <input id="reminder-code" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="43">
+        <button type="button" class="primary" id="reminder-enable">Activer les notifications</button>
+      </div>
+      <button type="button" id="reminder-test-notification" hidden>Envoyer une notification de test</button>
+      <button type="button" id="reminder-disable" hidden>Désactiver sur cet appareil</button>
+      <p id="reminder-device-feedback" class="plus-feedback" role="status"></p>
+    </div>
+    <form id="reminder-form" novalidate>
+      <div id="reminder-cards"></div>
+      <button type="submit" id="reminder-save-schedules" class="primary">Enregistrer les rappels</button>
+      <p id="reminder-status" role="status" class="plus-feedback"></p>
+    </form>
+  </div>
+</section>
 <section data-plus-panel="prefs" hidden><h1>⚙️ Mes préférences</h1><div class="plus-option"><label>Affichage des quantités<select id="pref-unit"><option value="g">Grammes (g)</option><option value="piece">Pièce</option><option value="cl">Centilitres (cl)</option><option value="ml">Millilitres (ml)</option></select></label><label><input id="pref-compact" type="checkbox" checked> Affichage compact</label></div><button type="button" id="save-prefs" class="primary">Enregistrer mes préférences</button><p id="prefs-feedback" role="status" class="plus-feedback"></p></section>
 <section data-plus-panel="backup" hidden><h1>💾 Sauvegarde et restauration</h1><p class="plus-note">Sauvegarde tes données avant toute modification importante. Les données de Nutrition LITE restent distinctes.</p><button id="export" class="primary plus-full">Exporter mes données JSON</button><label class="plus-import">Importer une sauvegarde du prototype<input type="file" id="import-data" accept=".json,application/json"></label><p class="plus-note">L'importation remplace les données de cette version après confirmation. Les fichiers de Nutrition LITE ne sont pas encore pris en charge.</p><p id="backup-feedback" role="status" class="plus-feedback"></p></section>
 <section data-plus-panel="about" hidden><h1>ℹ️ À propos</h1><p class="plus-note"><strong>Gros Pétard — Nutrition</strong><br>Prévisualisation mobile · Données enregistrées localement sur cet appareil et ce site. Pense à exporter régulièrement une sauvegarde.</p></section>

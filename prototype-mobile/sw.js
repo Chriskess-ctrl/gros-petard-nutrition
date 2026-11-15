@@ -1,4 +1,4 @@
-const CACHE = 'gp-nutrition-prototype-neon-v6';
+const CACHE = 'gp-nutrition-prototype-neon-v7';
 const ENTRY = './index.html';
 const ART = [
   'welcome', 'crown', 'charms', 'flourish-left', 'flourish-right',
@@ -10,7 +10,7 @@ const ART = [
 ];
 const ASSETS = [
   ENTRY, './style.css', './neon.css', './editor.css', './app.js', './suivi.js',
-  './manifest.webmanifest', './reminders.js', '../icon-192.png', '../icon-512.png',
+  './manifest.webmanifest', './library-picker.js', './reminders.js', '../icon-192.png', '../icon-512.png',
   ...ART.map(name => './assets/' + name + '.webp'),
 ];
 
@@ -42,7 +42,7 @@ self.addEventListener('fetch', event => {
       return await fetch(request);
     } catch {
       const cache = await caches.open(CACHE);
-      const cached = await cache.match(request);
+      const cached = await cache.match(request, { ignoreSearch: true });
       if (cached) return cached;
       // A Vercel share link or a campaign link can carry a query string.
       if (request.mode === 'navigate' && url.href.startsWith(self.registration.scope)) {
@@ -64,9 +64,14 @@ self.addEventListener('notificationclick', event => {
   })());
 });
 self.addEventListener('push', event => {
-  if(!event.data)return;
-  let payload;try{payload=event.data.json()}catch{return;}
-  const title=typeof payload.title==='string'?payload.title.slice(0,100):'GROS PÉTARD — Nutrition';
-  const body=typeof payload.body==='string'?payload.body.slice(0,240):'Ton rappel est arrivé.';
-  event.waitUntil(self.registration.showNotification(title,{body,icon:'../icon-192.png',tag:'gp-reminder'}));
+  if (!event.data) return;
+  let payload;
+  try { payload = event.data.json(); } catch { return; }
+  if (!payload || typeof payload !== 'object') return;
+  const body = typeof payload.body === 'string' ? payload.body.slice(0, 240) : 'Ton rappel est arrivé.';
+  const tag = typeof payload.tag === 'string' && /^[a-z0-9-]{1,32}$/.test(payload.tag) ? payload.tag : 'gp-reminder';
+  const icon = new URL('../icon-192.png', self.registration.scope).href;
+  event.waitUntil(self.registration.showNotification('GROS PÉTARD — Nutrition', {
+    body, icon, tag, renotify: tag === 'gp-test',
+  }));
 });

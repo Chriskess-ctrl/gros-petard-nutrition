@@ -1,0 +1,22 @@
+name = "gros-petard-rappels-recette"
+main = "src/index.mjs"
+compatibility_date = "2026-11-13"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+preview_urls = false
+
+[triggers]
+crons = ["* * * * *"]
+
+[[kv_namespaces]]
+binding = "RAPPELS_KV"
+# Reserved for the local emulator. Set the separate recipe namespace in a local config before deploying.
+id = "00000000000000000000000000000000"
+
+[[durable_objects.bindings]]
+name = "REMINDER_REGISTRY"
+class_name = "ReminderRegistry"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ReminderRegistry"]

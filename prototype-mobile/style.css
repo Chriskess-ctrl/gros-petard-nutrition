@@ -253,4 +253,10 @@ body.interior-page .header{display:none}body.inside-tracking .header{display:non
 .reminder-options label{display:flex;flex-direction:column;gap:5px;min-width:0;font-size:.9rem}
 .reminder-options input,.reminder-options select{width:100%;min-width:0;min-height:44px;font-size:16px}
 #reminder-save-schedules,#reminder-test-notification{min-height:44px;margin:6px 6px 6px 0}
+.reminder-device{margin:12px 0 18px;padding:12px;border:1px solid #a58b65;border-radius:16px}
+.reminder-device .plus-note{margin-top:0}
+.reminder-device button{min-height:44px}
+.reminder-device .plus-feedback:empty,#reminder-status:empty{display:none}
+.reminder-enrollment{display:grid;gap:8px}
+.reminder-enrollment input{width:100%;min-width:0;min-height:44px;font-size:16px}
 @media(max-width:380px){.reminder-options{grid-template-columns:1fr}}

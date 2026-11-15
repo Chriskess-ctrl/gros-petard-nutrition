@@ -1,0 +1,16 @@
+{
+  "name": "gros-petard-rappels",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "dev": "wrangler dev --test-scheduled",
+    "check": "wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "web-push": "4.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "4.162.0"
+  }
+}
