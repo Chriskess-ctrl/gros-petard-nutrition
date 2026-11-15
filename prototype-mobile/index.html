@@ -139,7 +139,7 @@
       <p id="reminder-device-status" class="plus-note">Notifications désactivées sur cet appareil.</p>
       <div id="reminder-enrollment" class="reminder-enrollment" hidden>
         <label for="reminder-code">Code d’activation</label>
-        <input id="reminder-code" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="43">
+        <div class="reminder-code-field"><input id="reminder-code" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="43"><button type="button" id="reminder-code-toggle" class="reminder-code-toggle" aria-label="Afficher le code" aria-pressed="false" title="Afficher le code">👁️</button></div>
         <button type="button" class="primary" id="reminder-enable">Activer les notifications</button>
       </div>
       <button type="button" id="reminder-test-notification" hidden>Envoyer une notification de test</button>
