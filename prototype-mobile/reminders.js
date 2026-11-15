@@ -18,6 +18,7 @@
     'snack-pm': ['Collation après-midi', 'daily', 0, '16:00'],
     dinner: ['Dîner', 'daily', 0, '20:00'],
   };
+  const today = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`; };
   const weekdays = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
   const supported = window.isSecureContext && 'Notification' in window
     && 'serviceWorker' in navigator && 'PushManager' in window;
@@ -57,11 +58,11 @@
     return Object.fromEntries(Object.entries(choices).map(([kind, [, fallbackFrequency, fallbackDay, fallbackTime]]) => {
       const legacyKind = kind === 'dinner' ? 'food' : kind;
       const saved = current?.[kind] || legacy?.[legacyKind];
-      const frequency = ['daily', 'weekly', 'monthly'].includes(saved?.frequency) ? saved.frequency : fallbackFrequency;
+      const frequency = ['once', 'daily', 'weekly', 'monthly'].includes(saved?.frequency) ? saved.frequency : fallbackFrequency;
       const day = validDay(saved?.day, frequency) ? Number(saved.day) : Math.max(frequency === 'monthly' ? 1 : 0, fallbackDay);
       return [kind, {
         enabled: saved ? saved.enabled === true : legacyFlags?.[legacyKind] === true,
-        frequency, day, time: timePattern.test(saved?.time) ? saved.time : fallbackTime,
+        frequency, day, date: /^\d{4}-\d{2}-\d{2}$/.test(saved?.date || '') ? saved.date : today(), time: timePattern.test(saved?.time) ? saved.time : fallbackTime,
       }];
     }));
   }
@@ -92,32 +93,36 @@
     card.dataset.reminder = kind;
     card.innerHTML = '<label class="reminder-head"><span class="reminder-title"></span><input type="checkbox" aria-label="Activer ce rappel"></label>'
       + '<div class="reminder-options"><label>Fréquence<select data-field="frequency">'
-      + '<option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option>'
+      + '<option value="once">Une seule fois</option><option value="daily">Chaque jour</option><option value="weekly">Chaque semaine</option>'
       + '<option value="monthly">Chaque mois</option></select></label>'
       + '<label class="reminder-day">Jour<select data-field="day"></select></label>'
-      + '<label class="reminder-time-label">Heure (HH:MM)<input type="text" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="16:45" required></label></div>';
+      + '<label class="reminder-date">Date<input type="date" data-field="date" required></label>'
+      + '<div class="reminder-time-pair"><label>Heures<input data-field="hour" type="number" inputmode="numeric" min="0" max="23" step="1" required></label><span aria-hidden="true">:</span><label>Minutes<input data-field="minute" type="number" inputmode="numeric" min="0" max="59" step="1" required></label></div></div>';
     card.querySelector('.reminder-title').textContent = label;
     const enabled = card.querySelector('input[type=checkbox]');
     const options = card.querySelector('.reminder-options');
     const frequency = card.querySelector('[data-field=frequency]');
     const day = card.querySelector('[data-field=day]');
-    const time = card.querySelector('.reminder-time-label input');
+    const date = card.querySelector('[data-field=date]');
+    const hour = card.querySelector('[data-field=hour]');
+    const minute = card.querySelector('[data-field=minute]');
     enabled.checked = rule.enabled;
     options.hidden = !rule.enabled;
     frequency.value = rule.frequency;
-    time.value = rule.time;
-    day.parentElement.hidden = rule.frequency === 'daily';
+    date.value = rule.date;
+    date.min = today();
+    hour.value = String(Number(rule.time.slice(0,2))).padStart(2,'0');
+    minute.value = rule.time.slice(3);
+    day.parentElement.hidden = rule.frequency === 'daily' || rule.frequency === 'once';
+    date.parentElement.hidden = rule.frequency !== 'once';
     fillDays(day, rule.frequency, rule.day);
     enabled.addEventListener('change', () => { options.hidden = !enabled.checked; });
-    time.addEventListener('blur', () => {
-      const match = /^(\d{1,2})[:hH](\d{1,2})$/.exec(time.value.trim());
-      if (match) time.value = match[1].padStart(2, '0') + ':' + match[2].padStart(2, '0');
-    });
     frequency.addEventListener('change', () => {
-      day.parentElement.hidden = frequency.value === 'daily';
+      day.parentElement.hidden = frequency.value === 'daily' || frequency.value === 'once';
+      date.parentElement.hidden = frequency.value !== 'once';
       fillDays(day, frequency.value, day.value);
     });
-    bindings.set(kind, { enabled, frequency, day, time });
+    bindings.set(kind, { enabled, frequency, day, date, hour, minute });
     cards.append(card);
   }
 
@@ -125,14 +130,16 @@
     const entries = [];
     for (const [kind, fields] of bindings) {
       const enabled = fields.enabled.checked;
-      const time = fields.time.value;
+      const h = Number(fields.hour.value), m = Number(fields.minute.value);
+      const time = Number.isInteger(h) && Number.isInteger(m) && h >= 0 && h <= 23 && m >= 0 && m <= 59 && fields.hour.value !== '' && fields.minute.value !== '' ? String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') : '';
+      if (enabled && fields.frequency.value === 'once' && (!/^\d{4}-\d{2}-\d{2}$/.test(fields.date.value) || fields.date.value < today())) { fields.date.focus(); throw Error('Choisis une date valide pour « ' + choices[kind][0] + ' ».'); }
       if (enabled && !timePattern.test(time)) {
-        fields.time.focus();
+        fields.hour.focus();
         throw Error('Renseigne une heure pour « ' + choices[kind][0] + ' ».');
       }
       const frequency = fields.frequency.value;
       entries.push([kind, {
-        enabled, frequency, day: frequency === 'daily' ? 0 : Number(fields.day.value),
+        enabled, frequency, day: frequency === 'daily' || frequency === 'once' ? 0 : Number(fields.day.value), date: fields.date.value || today(),
         time: timePattern.test(time) ? time : choices[kind][3],
       }]);
     }
