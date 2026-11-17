@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - feat/samsung-push-reminders-2026-11-15
+      - fix/samsung-scheduled-web-push-2026-11-17
     paths:
       - .github/workflows/deploy-reminders-recette.yml
 
@@ -18,6 +19,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/feat/samsung-push-reminders-2026-11-15' || github.ref == 'refs/heads/fix/samsung-scheduled-web-push-2026-11-17'
     runs-on: ubuntu-latest
     environment: rappels-recette
     defaults:
@@ -30,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feat/samsung-push-reminders-2026-11-15
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:

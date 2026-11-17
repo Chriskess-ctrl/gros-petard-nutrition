@@ -24,9 +24,13 @@ function localMinute(formatter, timestamp) {
   };
 }
 
-export function dueReminders({ schedules, timeZone, activeFrom }, scheduledTime, lastSent) {
-  const enabled = Object.entries(schedules).filter(([, rule]) => rule.enabled);
-  if (!enabled.length) return [];
+export function planReminders({ schedules, timeZone, activeFrom, activeFromByKind = {} }, scheduledTime, sentOccurrences) {
+  const plan = { due: [], alreadySent: 0, beforeActivation: 0 };
+  const enabled = Object.entries(schedules).filter(([, rule]) => rule.enabled).map(([kind, rule]) => {
+    const [hour, minute] = rule.time.split(':').map(Number);
+    return { kind, rule, target: hour * 60 + minute };
+  });
+  if (!enabled.length) return plan;
 
   const formatter = new Intl.DateTimeFormat('en-GB', {
     timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
@@ -43,17 +47,24 @@ export function dueReminders({ schedules, timeZone, activeFrom }, scheduledTime,
     const after = current.date === previous.date && current.minute > previous.minute
       ? previous.minute : current.minute - 1;
     previous = current;
-    if (tick < activeFrom) continue;
-
-    for (const [kind, rule] of enabled) {
-      if (lastSent[kind] === current.date) continue;
+    for (const { kind, rule, target } of enabled) {
+      if (target <= after || target > current.minute) continue;
       if (rule.frequency === 'once' && rule.date !== current.date) continue;
       if (rule.frequency === 'weekly' && rule.day !== current.weekday) continue;
       if (rule.frequency === 'monthly' && current.day !== Math.min(rule.day, current.lastDay)) continue;
-      const [hour, minute] = rule.time.split(':').map(Number);
-      const target = hour * 60 + minute;
-      if (target > after && target <= current.minute) occurrences.set(kind, { kind, date: current.date });
+      occurrences.set(`${kind}/${current.date}`, { kind, date: current.date, time: rule.time, tick });
     }
   }
-  return [...occurrences.values()];
+
+  for (const { kind, date, time, tick } of occurrences.values()) {
+    if (sentOccurrences[kind]?.[date]?.includes(time)) {
+      plan.alreadySent += 1;
+    } else if (tick + MINUTE <= (activeFromByKind[kind] ?? activeFrom)) {
+      // A change during the target minute can still send on the next tick.
+      plan.beforeActivation += 1;
+    } else {
+      plan.due.push({ kind, date, time });
+    }
+  }
+  return plan;
 }

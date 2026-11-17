@@ -1,11 +1,12 @@
 import { DurableObject } from 'cloudflare:workers';
 import { generateRequestDetails } from 'web-push';
-import { dueReminders, REMINDER_MESSAGES, RETRY_MINUTES } from './schedule.mjs';
+import { planReminders, REMINDER_MESSAGES, RETRY_MINUTES } from './schedule.mjs';
 import {
   METHODS, RequestError, digest, isToken, json, matches, payload, validatePreferences, validateSubscription,
 } from './protocol.mjs';
 
 const MINUTE = 60_000;
+const DAY = 86_400_000;
 const DEVICE_PREFIX = 'device:';
 const KV_PREFIX = 'gp-push:v1:';
 const DEVICE_LIMIT = 5;
@@ -28,26 +29,40 @@ function errorResponse(error) {
 }
 
 async function sendPush(subscription, body, tag, env, ttl) {
-  const details = generateRequestDetails(subscription, JSON.stringify({ body, tag }), {
-    TTL: ttl,
-    topic: tag,
-    urgency: 'normal',
-    vapidDetails: { subject: env.VAPID_SUBJECT, publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY },
-  });
+  let status = null;
   try {
+    const details = generateRequestDetails(subscription, JSON.stringify({ body, tag }), {
+      TTL: ttl,
+      topic: tag,
+      urgency: 'normal',
+      vapidDetails: { subject: env.VAPID_SUBJECT, publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY },
+    });
     const headers = new Headers(details.headers);
     headers.delete('content-length');
     const response = await fetch(details.endpoint, {
       method: details.method, headers, body: details.body, redirect: 'manual', signal: AbortSignal.timeout(4500),
     });
+    status = response.status;
     await response.body?.cancel();
-    if (response.ok) return 'accepted';
-    if (response.status === 404 || response.status === 410) return 'expired';
-    console.warn('Push service refused delivery', response.status);
-    return 'unavailable';
-  } catch {
-    return 'unavailable';
+  } catch { /* An attempt without an HTTP response can be retried. */ }
+  let outcome = 'unavailable';
+  if (status >= 200 && status < 300) outcome = 'accepted';
+  else if (status === 404 || status === 410) outcome = 'expired';
+  const event = { event: 'reminders_push', flow: tag === 'gp-test' ? 'test' : 'scheduled', outcome, status };
+  if (outcome === 'unavailable') console.warn(event);
+  else console.info(event);
+  return outcome;
+}
+
+function reminderHistory(state, record) {
+  const history = { ...state?.sentOccurrences };
+  // Older records only know the date. Associate it with the previous rule before rescheduling.
+  for (const [kind, date] of Object.entries(state?.lastSent || {})) {
+    const days = history[kind] || {};
+    const rule = record.schedules[kind];
+    if (rule && !Object.hasOwn(days, date)) history[kind] = { ...days, [date]: [rule.time] };
   }
+  return history;
 }
 
 export class ReminderRegistry extends DurableObject {
@@ -102,23 +117,43 @@ export class ReminderRegistry extends DurableObject {
       }
     }
 
-    const previous = state && await this.env.RAPPELS_KV.get(state.kvKey, 'json');
+    const previous = state && await this.readRecord(id, state);
     const content = { subscription, ...preferences };
     if (previous && JSON.stringify(content) === JSON.stringify({
       subscription: previous.subscription, schedules: previous.schedules, timeZone: previous.timeZone,
     })) return json({ active: true });
 
-    // A fresh KV key avoids reading a cached value from a prior revision.
+    const activeFrom = Date.now();
+    const sameTimeZone = previous?.timeZone === content.timeZone;
+    const activeFromByKind = Object.fromEntries(Object.entries(content.schedules).map(([kind, rule]) => {
+      const unchanged = sameTimeZone && JSON.stringify(rule) === JSON.stringify(previous.schedules[kind]);
+      return [kind, unchanged ? previous.activeFromByKind?.[kind] ?? previous.activeFrom : activeFrom];
+    }));
+    const record = { ...content, activeFrom, activeFromByKind };
     const kvKey = KV_PREFIX + crypto.randomUUID();
-    await this.env.RAPPELS_KV.put(kvKey, JSON.stringify({ ...content, activeFrom: Date.now() }));
+    await this.env.RAPPELS_KV.put(kvKey, JSON.stringify(record));
     try {
-      await this.ctx.storage.put(id, { ...state, kvKey, fingerprint, lastSent: state?.lastSent || {} });
+      await this.ctx.storage.put(id, {
+        ...state, kvKey, fingerprint, savedRecord: { kvKey, record },
+        sentOccurrences: reminderHistory(state, previous || record),
+      });
     } catch (error) {
       await this.cleanKV(kvKey);
       throw error;
     }
     if (state?.kvKey) await this.cleanKV(state.kvKey);
     return json({ active: true });
+  }
+
+  async readRecord(id, state) {
+    if (state.savedRecord?.kvKey === state.kvKey) return state.savedRecord.record;
+    // Copy an existing subscription on first use. The KV key identifies its exact revision.
+    const record = await this.env.RAPPELS_KV.get(state.kvKey, 'json');
+    if (record) {
+      state.savedRecord = { kvKey: state.kvKey, record };
+      await this.ctx.storage.put(id, state);
+    }
+    return record;
   }
 
   async cleanKV(key) {
@@ -136,7 +171,7 @@ export class ReminderRegistry extends DurableObject {
 
   async testPush(id, state) {
     if (Date.now() - (state.lastTestAt || 0) < MINUTE) return json({ error: 'test_rate_limited' }, 429);
-    const record = await this.env.RAPPELS_KV.get(state.kvKey, 'json');
+    const record = await this.readRecord(id, state);
     if (!record) return json({ error: 'temporarily_unavailable' }, 503);
     await this.ctx.storage.put(id, { ...state, lastTestAt: Date.now() });
     const result = await sendPush(record.subscription, 'Tu reçois les rappels sur cet appareil.', 'gp-test', this.env, 60);
@@ -148,29 +183,56 @@ export class ReminderRegistry extends DurableObject {
   }
 
   async deliver(time) {
-    if (!Number.isSafeInteger(time) || Date.now() - time >= RETRY_MINUTES * MINUTE) return;
+    if (!Number.isSafeInteger(time) || Date.now() - time >= RETRY_MINUTES * MINUTE) {
+      console.warn({ event: 'reminders_schedule', outcome: 'invalid_or_stale_tick' });
+      return;
+    }
     const devices = await this.ctx.storage.list({ prefix: DEVICE_PREFIX });
+    const summary = {
+      event: 'reminders_schedule', devices: devices.size, not_due: 0, before_activation: 0,
+      already_sent: 0, missing_record: 0, subscription_expired: 0, accepted: 0, push_unavailable: 0,
+    };
     const deliveries = await Promise.allSettled([...devices].map(async ([id, state]) => {
-      const record = await this.env.RAPPELS_KV.get(state.kvKey, 'json');
-      if (!record) return;
+      const record = await this.readRecord(id, state);
+      if (!record) {
+        summary.missing_record += 1;
+        return;
+      }
       if (record.subscription.expirationTime !== null && record.subscription.expirationTime <= Date.now()) {
+        summary.subscription_expired += 1;
         await this.remove(id, state);
         return;
       }
+      const sentOccurrences = reminderHistory(state, record);
+      const { due, alreadySent, beforeActivation } = planReminders(record, time, sentOccurrences);
+      summary.already_sent += alreadySent;
+      summary.before_activation += beforeActivation;
+      if (!due.length && !alreadySent && !beforeActivation) summary.not_due += 1;
       const lastSent = { ...state.lastSent };
-      for (const { kind, date } of dueReminders(record, time, lastSent)) {
-        const result = await sendPush(record.subscription, REMINDER_MESSAGES[kind], `gp-${kind}-${date}`, this.env, 600);
+      for (const { kind, date, time: localTime } of due) {
+        const tag = `gp-${kind}-${date}-${localTime.replace(':', '')}`;
+        const result = await sendPush(record.subscription, REMINDER_MESSAGES[kind], tag, this.env, 600);
         if (result === 'expired') {
+          summary.subscription_expired += 1;
           await this.remove(id, state);
           return;
         }
-        if (result === 'accepted') {
-          lastSent[kind] = date;
-          await this.ctx.storage.put(id, { ...state, lastSent });
+        if (result === 'unavailable') {
+          summary.push_unavailable += 1;
+          continue;
         }
+        summary.accepted += 1;
+        lastSent[kind] = date;
+        const days = sentOccurrences[kind] || {};
+        const oldestDate = new Date(Date.parse(date) - 2 * DAY).toISOString().slice(0, 10);
+        sentOccurrences[kind] = Object.fromEntries(Object.entries({ ...days, [date]: [...(days[date] || []), localTime] })
+          .filter(([sentDate]) => sentDate >= oldestDate));
+        await this.ctx.storage.put(id, { ...state, lastSent, sentOccurrences });
       }
     }));
-    if (deliveries.some(item => item.status === 'rejected')) throw new Error('Delivery interrupted');
+    const failures = deliveries.filter(item => item.status === 'rejected').length;
+    console.info({ ...summary, failures });
+    if (failures) throw new Error('Delivery interrupted');
   }
 }
 
@@ -202,7 +264,10 @@ export default {
   },
 
   async scheduled(controller, env, ctx) {
-    if (!configured(env)) return;
+    if (!configured(env)) {
+      console.warn({ event: 'reminders_schedule', outcome: 'not_configured' });
+      return;
+    }
     ctx.waitUntil((async () => {
       const response = await registry(env).fetch('https://reminders.internal/tick', {
         method: 'POST', body: JSON.stringify({ time: controller.scheduledTime }),
